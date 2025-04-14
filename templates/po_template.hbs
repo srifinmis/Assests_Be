@@ -1,0 +1,239 @@
+{{!-- templates/po_template.hbs --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    padding: 50px;
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  .table th, .table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+    word-wrap: break-word;
+  }
+  .table th {
+    background-color: #001f3f;
+    font-weight: bold;
+    color: #ffffff ;
+  }
+  .title {
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .box {
+  display: inline-block;
+  width: 49%; /* Equal width */
+  min-height: 100px; /* Set minimum height instead of fixed height */
+  border: 1px solid #001f3f;
+  padding: 10px;
+  background-color: #ffffff;
+  color: #000;
+  box-sizing: border-box;
+  vertical-align: top;
+}
+
+  .box-label {
+    background-color: #001f3f;
+    color: #fff;
+    padding: 5px;
+    font-weight: bold;
+    display: block;
+    width: 100%;
+    border-radius: 3px;
+    margin-bottom: 5px;
+  }
+  .amount-box {
+    border: 1px solid #001f3f;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+    color: #000;
+    box-sizing: border-box;
+     text-align: center; /* Center text */
+  }
+  .amount-box-label,
+  .terms-box-label {
+    background-color: #001f3f;
+    color: #fff;
+    padding: 5px;
+    font-weight: bold;
+    border-radius: 3px;
+    display: block;
+    margin-bottom: 5px;
+    width: 100%;
+    box-sizing: border-box;
+      text-align: center; /* Center label text */
+
+  }
+  .terms-box {
+    display: inline-block;
+    width: 48%;
+    height: 100px;
+    box-sizing: border-box;
+    padding: 10px;
+    margin-top: 10px;
+    vertical-align: top;
+    border: 1px solid #ccc;
+    background-color: #fafafa;
+  }
+  .signature {
+    margin-top: 40px;
+    text-align: right;
+  }
+  .signature-line {
+    display: inline-block;
+    margin-top: 10px;
+    width: 200px;
+    border-bottom: 1px solid #000;
+  }
+</style>
+
+<body>
+  <div class="container">
+    <!-- Title -->
+    <div class="title">Purchase Order</div>
+
+    <!-- Vendor Info (Left) and PO Number/Date (Right) -->
+    <div class="header">
+      <div class="box">
+        <div class="box-label">{{client_name}}</div>
+        <strong>Address:</strong> {{client_address}}<br />
+        <strong>Phone:</strong> {{client_phone_num}}<br />
+        <strong>E-Mail:</strong> {{client_email}}<br />
+        <strong>GSTIN:</strong> {{client_gst_num}}<br />
+      </div>
+
+      <div style="text-align: right; align-self: flex-start;">
+        <!-- PO Number and Date without box -->
+        <strong>Date:</strong> {{po_date}}<br />  
+        <strong>{{po_num}} </strong>        
+      </div>
+    </div>
+
+    <!-- Client Info (Left) and Shipping Info (Right) -->
+    <div class="header">
+      <div class="box">
+        <div class="box-label"><strong>Vendor:</strong>{{vendor_name}}</div>
+        <strong>Address:</strong> {{vendor_address}}<br />
+        <strong>Phone:</strong> {{vendor_phone_num}}<br />
+        <strong>E-Mail:</strong> {{vendor_email}}<br />
+        <strong>GSTIN:</strong> {{vendor_gst_num}}<br />
+      </div>
+
+      <div class="box">
+        <div class="box-label">Shipping Address {{shipping_name}}</div>
+        <strong>Address:</strong> {{shipping_address}}<br />
+        <strong>Phone:</strong> {{shipping_phone_num}}<br />
+
+      </div>
+    </div>
+
+    <!-- Item Table -->
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="padding: 8px; text-align: center;">S.NO</th>
+          <th style="padding: 8px; text-align: center;">Description</th>
+          <th style="padding: 8px; text-align: center;">Quantity</th>
+          <th style="padding: 8px; text-align: center;">Unit Price</th>
+          <th style="padding: 8px; text-align: center;">Total </th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each line_items}}
+        <tr>
+          <td>{{increment @index}}</td>
+          <td>{{asset_name}}</td>
+          <td>{{quantity}}</td>
+          <td>{{unit_price}}</td>
+          <td>₹ {{multiply quantity unit_price}}</td>
+
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <!-- Combined Summary Table -->
+    <table class="table">
+      <tr>
+        <td style="text-align: left; font-weight: bold;">Subtotal:</td>
+        <td style="text-align: right;">₹{{ totals.subtotal}}</td>
+      </tr>
+      <tr>
+        <td style="text-align: left; font-weight: bold;">IGST@{{gst}}%:</td>
+        <td style="text-align: right;">₹{{ totals.gstAmount}}</td>
+      </tr>
+      <tr>
+        <td style="text-align: left; font-weight: bold;">CGST@9%:</td>
+        <td style="text-align: right;">{{cgst_total}}</td>
+      </tr>
+      <tr>
+        <td style="text-align: left; font-weight: bold;">sGST@9%:</td>
+        <td style="text-align: right;">{{sgst_total}}</td>
+      </tr>
+      <tr>
+        <td style="text-align: left; font-weight: bold;">Shipping:</td>
+        <td style="text-align: right;">{{shipping}}</td>
+      </tr>
+      <tr>
+        <td style="text-align: left; font-weight: bold;">Round Off:</td>
+        <td style="text-align: right;">{{round_off}}</td>
+      </tr>
+      <tr>
+        <td style="text-align: left; font-weight: bold;">Total:</td>
+        <td style="text-align: right;">₹{{totals.grandTotal}}</td>
+      </tr>
+    </table>
+
+    <!-- Amount in Words -->
+    <div class="amount-box">
+      <div class="amount-box-label">Amount in Words</div>
+      {{amount_in_words}}
+    </div>
+
+    <!-- Terms & Conditions and Delivery Terms -->
+    <div>
+      <div class="terms-box">
+        <div class="terms-box-label">Terms & Conditions:</div>
+        Payment:{{payment_terms}} <br/>
+        Warranty:{{warranty}}
+      </div>
+      <div class="terms-box">
+        <div class="terms-box-label">Delivery Terms</div>
+        {{delivery_terms}} 
+      </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature">
+      <strong>Authorized Signatory:</strong>
+    </div>
+  </div>
+</body>
+
+</html>
