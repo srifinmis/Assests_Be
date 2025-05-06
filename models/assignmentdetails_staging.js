@@ -16,7 +16,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     asset_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(50),
       allowNull: true,
       references: {
         model: 'assetmaster',
@@ -50,6 +50,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     remarks: {
       type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    bulk_id: {
+      type: DataTypes.INTEGER,
       allowNull: true
     }
   }, {

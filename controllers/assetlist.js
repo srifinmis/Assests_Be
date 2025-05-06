@@ -101,22 +101,6 @@ router.get("/details/:category/:type", async (req, res) => {
       });
     }
 
-    // Fetch unassigned assets filtered by type
-    // let unassignedAssets = [];
-    // if (category === "free-pool" || category==="total-assets") {
-    //   unassignedAssets = await assetmaster.findAll({
-    //     attributes: ["asset_id", "brand", "model", "imei_num"],
-    //     where: {
-    //       asset_id: {
-    //         [Op.notIn]: Sequelize.literal(`(SELECT asset_id FROM assignmentdetails)`),
-    //         [Op.notIn]: Sequelize.literal(`(SELECT asset_id FROM staging.assignmentdetails_staging)`),
-    //       },
-    //       asset_type: { [Op.iLike]: type.trim() }, // Filter by asset type
-    //     },
-    //     raw: true,
-    //   });
-    // }
-
     let unassignedAssets = [];
 if (category === "free-pool" || category === "total-assets") {
   unassignedAssets = await assetmaster.findAll({

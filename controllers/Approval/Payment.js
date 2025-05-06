@@ -4,8 +4,10 @@ const router = express.Router();
 const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
 const models = initModels(sequelize);
-const sendEmail = require("../../utils/sendEmail");
 const { Op } = require("sequelize");
+
+const sendEmail = require("../../utils/sendEmail");
+const calculateDepreciation = require("../../utils/Depreciation");
 
 const { payment_assignment_staging, userlogins, po_processing_staging, po_processing, assetmaster_staging,} = models;
 
@@ -20,7 +22,7 @@ router.get("/receipt", async (req, res) => {
         {
           model: po_processing_staging,
           as: "po_num_po_processing_staging",
-          attributes: ["payment_receipt_url"]
+          attributes: ["payment_receipt_url", "asset_creation_at"]
         }
       ]
     });
@@ -63,6 +65,7 @@ router.get("/receipt", async (req, res) => {
       payment_status: item.payment_status,
       requested_by: item.requested_by,
       payment_url: item.po_num_po_processing_staging?.payment_receipt_url || null,
+      asset_creation_at: item.po_num_po_processing_staging?.asset_creation_at || null,
       assets: poAssetMap[item.po_num] || []
     }));
 
@@ -114,36 +117,58 @@ router.post("/action", async (req, res) => {
       }
     );
 
-    let invoiceData = [];
+    if (normalizedAction === "reject") {
+      // Step 1: Fetch the rejected po_nums from payment_assignment_staging
+      const rejectedPoData = await payment_assignment_staging.findAll({
+        where: {
+          assignment_id: { [Op.in]: assignmentIds },
+        },
+        attributes: ['po_num'],
+        raw: true,
+        transaction,
+      });
+    
+      const rejectedPoNums = rejectedPoData.map(p => p.po_num);
+    
+      // Step 2: Delete from assetmaster_staging where po_num is in rejectedPoNums
+      await assetmaster_staging.destroy({
+        where: {
+          po_num: { [Op.in]: rejectedPoNums },
+        },
+        transaction,
+      });
+    }
+    
+    let paymentData = [];
 
     if (normalizedAction === "approve") {
       // ✅ On approval, match and update the po_processing table
     
       // Fetch data from payment_assignment_staging
-      invoiceData = await payment_assignment_staging.findAll({
+      paymentData = await payment_assignment_staging.findAll({
         where: { assignment_id: { [Op.in]: assignmentIds } },
         attributes: ["po_num", "utr_num"],
         raw: true,
         transaction,
       });
     
-      for (const data of invoiceData) {
+      for (const data of paymentData) {
         const poProcessingData = await po_processing_staging.findOne({
           where: {
             po_num: data.po_num,
             utr_num: data.utr_num,
           },
-          attributes: ["po_num", "utr_num", "invoice_date", "payment_receipt_url"],
+          attributes: ["po_num", "utr_num", "payment_date", "payment_receipt_url", "asset_creation_at"],  // Fetch asset_creation_at from po_processing
           raw: true,
           transaction,
         });
     
-        if (poProcessingData) {
+        if (poProcessingData && poProcessingData.asset_creation_at === 'payment') {  // Only proceed if asset_creation_at is 'payment'
           await po_processing.update(
             {
               po_num: poProcessingData.po_num,
               utr_num: poProcessingData.utr_num,
-              invoice_date: poProcessingData.invoice_date,
+              payment_date: poProcessingData.payment_date,
               payment_url: poProcessingData.payment_receipt_url,
             },
             {
@@ -155,41 +180,64 @@ router.post("/action", async (req, res) => {
           );
         }
       }
-    
+
       // ✅ After updating po_processing
-      const approvedPoNums = invoiceData.map((d) => d.po_num);
+      const approvedPoNums = paymentData.map((d) => d.po_num);
     
-      // ✅ Move assets from staging to assetmaster
+      // ✅ Move assets from staging to assetmaster only if asset_creation_at = 'payment' in po_processing
       const stagedAssets = await assetmaster_staging.findAll({
         where: { po_num: { [Op.in]: approvedPoNums } },
         raw: true,
         transaction,
       });
     
-      await models.assetmaster.bulkCreate(stagedAssets, { transaction });
+      // Only move assets if asset_creation_at = 'payment' from po_processing
+      const assetsToMove = [];
+      
+      for (const asset of stagedAssets) {
+        const poProcessingData = await po_processing_staging.findOne({
+          where: { po_num: asset.po_num },
+          attributes: ["asset_creation_at"],
+          raw: true,
+          transaction,
+        });
+
+        if (poProcessingData?.asset_creation_at === 'payment') {
+          assetsToMove.push(asset);
+        }
+      }
+
+      if (assetsToMove.length > 0) {
+        await models.assetmaster.bulkCreate(assetsToMove, { transaction, ignoreDuplicates: true });
+
+        // Calculate depreciation for each asset
+        for (const asset of assetsToMove) {
+          await calculateDepreciation(asset, transaction);
+        }
+      }
     }
-    
+
     // ✅ Fetch requester emails
-    const invoiceRequests = await payment_assignment_staging.findAll({
+    const paymentRequests = await payment_assignment_staging.findAll({
       where: { assignment_id: { [Op.in]: assignmentIds } },
       attributes: ["assignment_id", "requested_by"],
       transaction,
     });
 
-    const requestorEmpIds = invoiceRequests.map(req => req.requested_by);
+    const requestorEmpIds = paymentRequests.map(req => req.requested_by);
     const requestorUsers = await userlogins.findAll({
       where: { emp_id: { [Op.in]: requestorEmpIds } },
       attributes: ["emp_id", "email"],
       transaction,
     });
 
-    // ✅ Notify requestors (invoice status)
-    for (const req of invoiceRequests) {
+    // ✅ Notify requestors (Payment status)
+    for (const req of paymentRequests) {
       const user = requestorUsers.find(u => u.emp_id === req.requested_by);
       if (user?.email) {
         await sendEmail({
           to: user.email,
-          subject: `Invoice ${req.assignment_id} ${newStatus}`,
+          subject: `Payment Receipt ${req.assignment_id} ${newStatus}`,
           html: `Your payment receipt request <strong>${req.assignment_id}</strong> has been <strong>${newStatus}</strong>. ${
             remark ? `<br/><strong>Remarks:</strong> ${remark}` : ""
           }`,
@@ -200,17 +248,18 @@ router.post("/action", async (req, res) => {
     // ✅ Notify approver
     await sendEmail({
       to: approver.email,
-      subject: `Invoice ${newStatus} Confirmation`,
+      subject: `Payment Receipt ${newStatus} Confirmation`,
       html: `You have successfully <strong>${newStatus}</strong> the following payment receipt request(s): <strong>${assignmentIds.join(", ")}</strong>.`,
     });
 
     await transaction.commit();
-    res.status(200).json({ message: `Invoice ${newStatus} successful.` });
+    res.status(200).json({ message: `Payment Receipt ${newStatus} successful.` });
   } catch (error) {
-    console.error("Invoice action error:", error);
+    console.error("Payment Receipt action error:", error);
     await transaction.rollback();
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 module.exports = router;

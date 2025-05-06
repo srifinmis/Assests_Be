@@ -8,29 +8,33 @@ module.exports = function(sequelize, DataTypes) {
       primaryKey: true
     },
     asset_type: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(50),
       allowNull: false,
-      unique: "asset_types_asset_type_unique"
+      unique: "asset_types_asset_type_key"
+    },
+    asset_code: {
+      type: DataTypes.STRING(10),
+      allowNull: false
     },
     salvage_percent: {
       type: DataTypes.DECIMAL,
-      allowNull: true
+      allowNull: false
     },
     depreciation_percent: {
       type: DataTypes.DECIMAL,
-      allowNull: true
+      allowNull: false
     },
     depreciation_years: {
       type: DataTypes.INTEGER,
-      allowNull: true
+      allowNull: false
     },
     cgst_percent: {
       type: DataTypes.DECIMAL,
-      allowNull: true
+      allowNull: false
     },
     sgst_percent: {
       type: DataTypes.DECIMAL,
-      allowNull: true
+      allowNull: false
     }
   }, {
     sequelize,
@@ -38,6 +42,13 @@ module.exports = function(sequelize, DataTypes) {
     schema: 'public',
     timestamps: false,
     indexes: [
+      {
+        name: "asset_types_asset_type_key",
+        unique: true,
+        fields: [
+          { name: "asset_type" },
+        ]
+      },
       {
         name: "asset_types_asset_type_unique",
         unique: true,

@@ -4,14 +4,12 @@ const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
 const models = initModels(sequelize);
 const sendEmail = require("../../utils/sendEmail");
-const { Op } = require("sequelize");
 
 const {
   assignmentdetails_staging,
   assetmaster,
   userlogins,
   approver_staging,
-  approver,
   assignmentdetails,
 } = models;
 
@@ -88,387 +86,386 @@ router.get("/free-under-assets", async (req, res) => {
   }
 });
 
-// Approve Assignments
+// router.post('/action', async (req, res) => {
+//   const { requestNums, action, approved_by, remarks } = req.body;
 
-// router.post("/approve", async (req, res) => {
-//   const { approved_by, requestNums, remarks } = req.body;
+//   if (!requestNums || !action || !approved_by) {
+//     return res.status(400).json({ message: 'Missing required parameters' });
+//   }
 
-//   // Start transaction
+//   if (action === 'rejected' && !remarks) {
+//     return res.status(400).json({ message: 'Remarks are mandatory for rejection' });
+//   }
+
+//   const approvalStatus = action === 'approved' ? 'Accepted' : 'Rejected';
+//   const approvalDate = new Date().toISOString();
+//   const remarksToUpdate = action === 'rejected' ? remarks : null;
+
+//   const assignedType = action === 'approved' ? 'Accepted' : 'Rejected';
+//   const assignmentStatus = action === 'approved' ? 'Under Maintenance' : 'Rejected';
+
 //   const transaction = await sequelize.transaction();
 
 //   try {
-//     // Fetch approver details
-//     const approver = await models.userlogins.findOne({
-//       where: { emp_id: approved_by },
-//       attributes: ["emp_id", "emp_name", "email"],
-//       transaction,
-//     });
-
-//     if (!approver) {
-//       await transaction.rollback();
-//       return res.status(404).json({ error: "Approver not found." });
-//     }
-
-//     // Update approver_staging table
-//     await models.approver_staging.update(
-//       {
-//         approved_by,
-//         approved_at: new Date(),
-//         approval_status: "Accepted",
-//         remarks: remarks || null,
-//       },
-//       {
-//         where: {
-//           request_num: { [Op.in]: requestNums },
-//           approval_status: "Pending",
-//         },
-//         transaction,
-//       }
-//     );
-
-//     // Update assignmentdetails_staging table
-//     await models.assignmentdetails_staging.update(
-//       {
-//         assigned_type: "Accepted",
-//         assignment_status: "Accepted",
-//         updatedat: new Date(),
-//       },
-//       {
-//         where: {
-//           assignment_id: { [Op.in]: requestNums },
-//           assignment_status: "In Progress",
-//         },
-//         transaction,
-//       }
-//     );
-
-//     // Fetch assignment details from staging
-//     const approvedAssignments = await models.assignmentdetails_staging.findAll({
-//       where: {
-//         assignment_id: { [Op.in]: requestNums },
-//         assignment_status: "Accepted",
-//       },
-//       attributes: ["asset_id", "assignment_id", "assigned_type"],
-//       transaction,
-//     });
-
-//     for (const record of approvedAssignments) {
-//       const existingAssignment = await models.assignmentdetails.findOne({
-//         where: { asset_id: record.asset_id },
+//     // Process each request number in bulk
+//     for (let requestNum of requestNums) {
+//       const approverRecord = await approver_staging.findOne({
+//         where: { request_num: requestNum, approval_status: 'Pending' },
 //         transaction,
 //       });
 
-//       if (existingAssignment) {
-//         // Update existing record
-//         await models.assignmentdetails.update(
-//           {
-//             assignment_id: record.assignment_id,
-//             assigned_type: "Accepted",
-//             assignment_status: "Assigned", // Changed from "Accepted" to "Assigned"
-//             updatedat: new Date(),
-//           },
-//           {
-//             where: { asset_id: record.asset_id },
+//       if (!approverRecord) {
+//         await transaction.rollback();
+//         return res.status(404).json({ message: `Approver record not found for request ${requestNum}` });
+//       }
+
+//       const assignmentId = approverRecord.assignment_id;
+
+//       const approverUser = await models.userlogins.findOne({
+//         where: { emp_id: approved_by },
+//         attributes: ["emp_id", "emp_name", "email"],
+//         transaction,
+//       });
+
+//       if (!approverUser) {
+//         await transaction.rollback();
+//         return res.status(404).json({ message: "Approver user not found." });
+//       }
+
+//       // Fetch the requested_by user
+//       const requestedByUser = await models.userlogins.findOne({
+//         where: { emp_id: approverRecord.requested_by },
+//         attributes: ["emp_id", "emp_name", "email"],
+//         transaction,
+//       });
+
+//       await approver_staging.update(
+//         {
+//           approved_by,
+//           approved_at: approvalDate,
+//           approval_status: approvalStatus,
+//           remarks: remarksToUpdate,
+//         },
+//         {
+//           where: { request_num: requestNum, approval_status: 'Pending' },
+//           transaction,
+//         }
+//       );
+
+//       await assignmentdetails_staging.update(
+//         {
+//           assigned_type: assignedType,
+//           assignment_status: assignmentStatus,
+//           remarks: remarksToUpdate,
+//           updatedat: approvalDate,
+//         },
+//         {
+//           where: { assignment_id: assignmentId, assignment_status: 'In Progress' },
+//           transaction,
+//         }
+//       );
+
+//       if (action === 'approved') {
+//         const assignmentExists = await assignmentdetails.findOne({
+//           where: { assignment_id: assignmentId },
+//           transaction,
+//         });
+
+//         if (assignmentExists) {
+//           await assignmentdetails.update(
+//             {
+//               assigned_type: assignedType,
+//               assignment_status: assignmentStatus,
+//               remarks: remarksToUpdate,
+//               updatedat: approvalDate,
+//             },
+//             {
+//               where: { assignment_id: assignmentId },
+//               transaction,
+//             }
+//           );
+//         } else {
+//           const assignmentRow = await assignmentdetails_staging.findOne({
+//             where: { assignment_id: assignmentId },
 //             transaction,
+//           });
+
+//           if (assignmentRow) {
+//             await assignmentdetails.create({
+//               assignment_id: assignmentRow.assignment_id,
+//               asset_id: assignmentRow.asset_id,
+//               system_id: assignmentRow.system_id,
+//               assigned_date: assignmentRow.assigned_date,
+//               assignment_status: 'Under Maintenance',
+//               branchid_name: assignmentRow.branchid_name,
+//               regionid_name: assignmentRow.regionid_name,
+//               updatedat: approvalDate,
+//               remarks: remarksToUpdate,
+//             }, { transaction });
 //           }
-//         );
-//       } else {
-//         // Create new record
-//         await models.assignmentdetails.create(
-//           {
-//             asset_id: record.asset_id,
-//             assignment_id: record.assignment_id,
-//             assigned_type: "Accepted",
-//             assignment_status: "Under Maintenance", // Changed from "Accepted" to "Under Maintenance"
-//             createdat: new Date(),
-//             updatedat: new Date(),
-//           },
-//           { transaction }
-//         );
+//         }
+//       }
+
+//       // EMAIL LOGIC
+//       if (action === 'approved') {
+//         // Send approval email to approver
+//         await sendEmail({
+//           to: approverUser.email,
+//           subject: "Asset Under Maintenance Request Approved",
+//           html: `
+//             <p>Hello ${approverUser.emp_name},</p>
+//             <p>Your approval for asset under maintenance request <strong>${requestNum}</strong> has been successfully processed.</p>
+//             <p>Remarks: ${remarks || "No remarks provided."}</p>
+//             <p>Regards,<br/>Asset Management Team</p>
+//           `,
+//         });
+
+//         // Send approval email to requestor
+//         if (requestedByUser) {
+//           await sendEmail({
+//             to: requestedByUser.email,
+//             subject: "Your Asset Under Maintenance Request Approved",
+//             html: `
+//               <p>Hello ${requestedByUser.emp_name},</p>
+//               <p>Your asset under maintenance request <strong>${requestNum}</strong> has been <b>approved</b>.</p>
+//               <p>Remarks: ${remarks || "No remarks provided."}</p>
+//               <p>Regards,<br/>Asset Management Team</p>
+//             `,
+//           });
+//         }
+//       } else if (action === 'rejected') {
+//         // Send rejection email to approver
+//         await sendEmail({
+//           to: approverUser.email,
+//           subject: "Asset Under Maintenance Request Rejected",
+//           html: `
+//             <p>Hello ${approverUser.emp_name},</p>
+//             <p>Your rejection for asset under maintenance request <strong>${requestNum}</strong> has been successfully processed.</p>
+//             <p>Remarks: ${remarks}</p>
+//             <p>Regards,<br/>Asset Management Team</p>
+//           `,
+//         });
+
+//         // Send rejection email to requestor
+//         if (requestedByUser) {
+//           await sendEmail({
+//             to: requestedByUser.email,
+//             subject: "Your Asset Under Maintenance Request Rejected",
+//             html: `
+//               <p>Hello ${requestedByUser.emp_name},</p>
+//               <p>Your asset under maintenance request <strong>${requestNum}</strong> has been <b>rejected</b>.</p>
+//               <p>Remarks: ${remarks}</p>
+//               <p>Regards,<br/>Asset Management Team</p>
+//             `,
+//           });
+//         }
 //       }
 //     }
 
-//     // Move records from approver_staging to approver table
-//     const approvedApprovers = await models.approver_staging.findAll({
-//       where: { request_num: { [Op.in]: requestNums } },
-//       transaction,
-//     });
-
-//     for (const approverRecord of approvedApprovers) {
-//       await models.approver.create(approverRecord.toJSON(), { transaction });
-//     }
-
-//     // Send email notification
-//     await sendEmail({
-//       to: approver.email,
-//       subject: "Asset Assignment Approved",
-//       html: `Your approval for the asset assignment request(s) ${requestNums.join(", ")} has been successfully processed.`,
-//     });
-
 //     await transaction.commit();
-//     res.status(200).json({ message: "Records approved successfully." });
+//     res.status(200).json({ message: `All records ${approvalStatus.toLowerCase()} successfully.` });
 //   } catch (error) {
-//     console.error("Error approving assignments:", error);
+//     console.error("Error processing bulk action:", error);
 //     await transaction.rollback();
-//     res.status(500).json({ error: "Internal Server Error" });
+//     res.status(500).json({ message: "Internal Server Error" });
 //   }
 // });
 
-router.post("/approve", async (req, res) => {
-  const { approved_by, requestNums, remarks } = req.body;
+router.post('/action', async (req, res) => {
+  const { requestNums, action, approved_by, remarks } = req.body;
 
-  // Start transaction
+  if (!requestNums || !action || !approved_by) {
+    return res.status(400).json({ message: 'Missing required parameters' });
+  }
+
+  if (action === 'rejected' && !remarks) {
+    return res.status(400).json({ message: 'Remarks are mandatory for rejection' });
+  }
+
+  const approvalStatus = action === 'approved' ? 'Accepted' : 'Rejected';
+  const approvalDate = new Date().toISOString();
+  const remarksToUpdate = action === 'rejected' ? remarks : null;
+
+  const assignedType = action === 'approved' ? 'Accepted' : 'Rejected';
+  let assignmentStatus = action === 'approved' ? 'Under Maintenance' : 'Rejected';
+
+  // Add the "Under Maintenance" logic (if applicable)
+  if (action === 'approved' && remarks && remarks.toLowerCase().includes("under maintenance")) {
+    assignmentStatus = 'Under Maintenance';
+  }
+
   const transaction = await sequelize.transaction();
 
   try {
-      console.log("Starting approval process...");
-
-      // Fetch approver details
-      const approver = await models.userlogins.findOne({
-          where: { emp_id: approved_by },
-          attributes: ["emp_id", "emp_name", "email"],
-          transaction,
+    // Process each request number in bulk
+    for (let requestNum of requestNums) {
+      const approverRecord = await approver_staging.findOne({
+        where: { request_num: requestNum, approval_status: 'Pending' },
+        transaction,
       });
 
-      if (!approver) {
-          console.error("Approver not found:", approved_by);
-          await transaction.rollback();
-          return res.status(404).json({ error: "Approver not found." });
+      if (!approverRecord) {
+        await transaction.rollback();
+        return res.status(404).json({ message: `Approver record not found for request ${requestNum}` });
       }
 
-      // Update approver_staging table
+      const assignmentId = approverRecord.assignment_id;
+
+      const approverUser = await models.userlogins.findOne({
+        where: { emp_id: approved_by },
+        attributes: ["emp_id", "emp_name", "email"],
+        transaction,
+      });
+
+      if (!approverUser) {
+        await transaction.rollback();
+        return res.status(404).json({ message: "Approver user not found." });
+      }
+
+      // Fetch the requested_by user
+      const requestedByUser = await models.userlogins.findOne({
+        where: { emp_id: approverRecord.requested_by },
+        attributes: ["emp_id", "emp_name", "email"],
+        transaction,
+      });
+
       await approver_staging.update(
-          {
-              approved_by,
-              approved_at: new Date().toISOString(),
-              approval_status: "Accepted",
-              remarks: remarks || null,
-          },
-          {
-              where: {
-                  request_num: { [Op.in]: requestNums },
-                  approval_status: "Pending",
-              },
-              transaction,
-          }
+        {
+          approved_by,
+          approved_at: approvalDate,
+          approval_status: approvalStatus,
+          remarks: remarksToUpdate,
+        },
+        {
+          where: { request_num: requestNum, approval_status: 'Pending' },
+          transaction,
+        }
       );
 
-      // Fetch approved assignments
-      const approvedAssignments = await assignmentdetails_staging.findAll({
-          where: {
-              assignment_id: { [Op.in]: requestNums },
-              assignment_status: "In Progress",
-          },
-          attributes: ["assignment_id", "asset_id", "system_id", "remarks"],
-          transaction,
-      });
-
-      const assetIds = approvedAssignments.map((record) => record.asset_id);
-
-      // Check which assets already exist in assignmentdetails
-      const existingAssignments = await assignmentdetails.findAll({
-          where: { asset_id: { [Op.in]: assetIds } },
-          attributes: ["asset_id"],
-          transaction,
-      });
-
-      const existingAssetIds = existingAssignments.map((record) => record.asset_id);
-
-      // Prepare bulk update and insert data
-      const updates = [];
-      const inserts = [];
-
-      for (const record of approvedAssignments) {
-          const { asset_id, system_id } = record;
-
-          if (existingAssetIds.includes(asset_id)) {
-              // Prepare update data for existing records
-              updates.push({
-                  asset_id,
-                  assignment_status: "Under Maintenance",
-                  updated_at: new Date(),
-                  remarks: remarks || null,
-                  system_id,
-              });
-          } else {
-              // Prepare insert data for new records
-              inserts.push({
-                  asset_id,
-                  assignment_status: "Under Maintenance",
-                  updated_at: new Date(),
-                  remarks: remarks || null,
-                  system_id,
-              });
-          }
-      }
-
-      // Bulk update existing records
-      if (updates.length > 0) {
-          for (const updateData of updates) {
-              await assignmentdetails.update(updateData, {
-                  where: { asset_id: updateData.asset_id },
-                  transaction,
-              });
-          }
-      }
-
-      // Bulk insert new records
-      if (inserts.length > 0) {
-          await assignmentdetails.bulkCreate(inserts, { transaction });
-      }
-
-      // Update assignmentdetails_staging table
       await assignmentdetails_staging.update(
-          {
-              assigned_type: "Accepted",
-              assignment_status: "Accepted",
-              remarks: remarks || null,
-              updatedat: new Date(),
-          },
-          {
-              where: {
-                  assignment_id: { [Op.in]: requestNums },
-                  assignment_status: "In Progress",
-              },
-              transaction,
-          }
+        {
+          assigned_type: assignedType,
+          assignment_status: assignmentStatus,
+          remarks: remarksToUpdate,
+          updatedat: approvalDate,
+        },
+        {
+          where: { assignment_id: assignmentId, assignment_status: 'In Progress' },
+          transaction,
+        }
       );
 
-      console.log("Approval process completed successfully.");
+      if (action === 'approved') {
+        // Fetch assignmentRow from assignmentdetails_staging
+        const assignmentRow = await assignmentdetails_staging.findOne({
+          where: { assignment_id: assignmentId },
+          transaction,
+        });
 
-      // Send approval email
-      await sendEmail({
-          to: approver.email,
-          subject: "Asset Assignment Approved",
+        if (!assignmentRow) {
+          // No matching assignment row found
+          await transaction.rollback();
+          return res.status(404).json({ message: `Assignment record not found for assignment_id ${assignmentId}` });
+        }
+
+        // Check if the asset_id exists in assignmentdetails
+        const assignmentExists = await assignmentdetails.findOne({
+          where: { asset_id: assignmentRow.asset_id },
+          transaction,
+        });
+
+        if (assignmentExists) {
+          // If asset_id exists, update the record in assignmentdetails
+          await assignmentdetails.update(
+            {
+              assigned_type: assignedType,
+              assignment_status: assignmentStatus,
+              remarks: remarksToUpdate,
+              updatedat: approvalDate,
+            },
+            {
+              where: { asset_id: assignmentRow.asset_id },
+              transaction,
+            }
+          );
+        } else {
+          // If asset_id doesn't exist, create a new record
+          await assignmentdetails.create({
+            assignment_id: assignmentRow.assignment_id,
+            asset_id: assignmentRow.asset_id,
+            system_id: assignmentRow.system_id,
+            assigned_date: assignmentRow.assigned_date,
+            assignment_status: assignmentStatus,
+            branchid_name: assignmentRow.branchid_name,
+            regionid_name: assignmentRow.regionid_name,
+            updatedat: approvalDate,
+            remarks: remarksToUpdate,
+          }, { transaction });
+        }
+      }
+
+      // EMAIL LOGIC
+      if (action === 'approved') {
+        // Send approval email to approver
+        await sendEmail({
+          to: approverUser.email,
+          subject: "Asset Under Maintenance Request Approved",
           html: `
-              <p>Hello ${approver.emp_name},</p>
-              <p>Your approval for asset assignment requests (<strong>${requestNums.join(", ")}</strong>) has been successfully processed.</p>
-              <p>Remarks: ${remarks || "No remarks provided."}</p>
-              <p>Regards,</p>
-              <p>Asset Management Team</p>
+            <p>Hello ${approverUser.emp_name},</p>
+            <p>Your approval for asset Under Maintenance request <strong>${requestNum}</strong> has been successfully processed.</p>
+            <p>Remarks: ${remarks || "No remarks provided."}</p>
+            <p>Regards,<br/>Asset Management Team</p>
           `,
-      });
+        });
 
-      // Commit transaction
-      await transaction.commit();
+        // Send approval email to requestor
+        if (requestedByUser) {
+          await sendEmail({
+            to: requestedByUser.email,
+            subject: "Your Asset Under Maintenance Request Approved",
+            html: `
+              <p>Hello ${requestedByUser.emp_name},</p>
+              <p>Your asset Under Maintenance request <strong>${requestNum}</strong> has been <b>approved</b>.</p>
+              <p>Remarks: ${remarks || "No remarks provided."}</p>
+              <p>Regards,<br/>Asset Management Team</p>
+            `,
+          });
+        }
+      } else if (action === 'rejected') {
+        // Send rejection email to approver
+        await sendEmail({
+          to: approverUser.email,
+          subject: "Asset Under Maintenance Request Rejected",
+          html: `
+            <p>Hello ${approverUser.emp_name},</p>
+            <p>Your rejection for asset Under Maintenance request <strong>${requestNum}</strong> has been successfully processed.</p>
+            <p>Remarks: ${remarks}</p>
+            <p>Regards,<br/>Asset Management Team</p>
+          `,
+        });
 
-      res.status(200).json({ message: "Records approved successfully." });
-  } catch (error) {
-      console.error("Error approving assignments:", error);
-      await transaction.rollback();
-      res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-
-// Reject Assignments
-router.post("/reject", async (req, res) => {
-  const { approved_by, requestNums, remarks } = req.body;
-
-  if (!remarks) {
-    return res.status(400).json({ error: "Remarks are mandatory for rejection." });
-  }
-
-  // Start transaction
-  const transaction = await sequelize.transaction();
-
-  try {
-    // Fetch user details in ONE query
-    const users = await models.userlogins.findAll({
-      where: {
-        emp_id: { [Op.in]: [approved_by] },
-      },
-      attributes: ["emp_id", "emp_name", "email", "designation_name", "branchid_name", "regionid_name", "system_id"],
-      transaction,
-    });
-
-    const approver = users.find(user => user.emp_id === approved_by);
-    if (!approver) {
-      await transaction.rollback();
-      return res.status(404).json({ error: "Approver not found." });
+        // Send rejection email to requestor
+        if (requestedByUser) {
+          await sendEmail({
+            to: requestedByUser.email,
+            subject: "Your Asset Under Maintenance Request Rejected",
+            html: `
+              <p>Hello ${requestedByUser.emp_name},</p>
+              <p>Your asset Under Maintenance request <strong>${requestNum}</strong> has been <b>rejected</b>.</p>
+              <p>Remarks: ${remarks}</p>
+              <p>Regards,<br/>Asset Management Team</p>
+            `,
+          });
+        }
+      }
     }
 
-    // Update approver_staging table
-    await approver_staging.update(
-      {
-        approved_by,
-        approved_at: new Date().toISOString(),
-        approval_status: "Rejected",
-        remarks: String(remarks), // Ensure remarks is a string
-      },
-      {
-        where: {
-          request_num: { [Op.in]: requestNums },
-          approval_status: "Pending",
-        },
-        transaction,
-      }
-    );
-
-    // Update assignmentdetails_staging table
-    await assignmentdetails_staging.update(
-      {
-        assigned_type: "Rejected", // Updated assigned_type to "Rejected"
-        assignment_status: "Rejected", // Updated status to "Rejected"
-        remarks: String(remarks), // Ensure remarks is a string
-        updatedat: new Date(),
-      },
-      {
-        where: {
-          assignment_id: { [Op.in]: requestNums },
-          assignment_status: "In Progress",
-        },
-        transaction,
-      }
-    );
-
-    // Fetch rejected approvers
-    const rejectedApprovers = await approver_staging.findAll({
-      where: { request_num: { [Op.in]: requestNums } },
-      transaction,
-    });
-
-    // Send email notifications
-    const approverEmail = approver.email;
-    await sendEmail({
-      to: approverEmail,
-      subject: "Asset Assignment Rejected",
-      html: `Your rejection for the asset assignment request(s) ${requestNums.join(", ")} has been successfully processed.`,
-    });
-
-    // Fetch requested_by emails for rejected assets
-    const requestedByEmails = await approver_staging.findAll({
-      where: { assignment_id: { [Op.in]: requestNums } },
-      attributes: ["requested_by"],
-      transaction,
-    });
-
-    const requestedEmails = requestedByEmails.map(record => record.requested_by);
-
-    const usersRequestingAssets = await models.userlogins.findAll({
-      where: {
-        emp_id: { [Op.in]: requestedEmails },
-      },
-      attributes: ["email"],
-      transaction,
-    });
-
-    usersRequestingAssets.forEach(async (user) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Asset Assignment Rejected",
-        html: `Your asset assignment request(s) ${requestNums.join(", ")} have been rejected. Please contact the approver for further details.`,
-      });
-    });
-
-    // Commit the transaction
     await transaction.commit();
-
-    res.status(200).json({ message: "Records rejected successfully." });
+    res.status(200).json({ message: `All records ${approvalStatus.toLowerCase()} successfully.` });
   } catch (error) {
-    console.error("Error rejecting assignments:", error);
+    console.error("Error processing bulk action:", error);
     await transaction.rollback();
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 

@@ -4,124 +4,211 @@
 <head>
   <meta charset="UTF-8" />
   <style>
-  body {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    margin: 0;
-    padding: 0;
-  }
-  .container {
-    padding: 50px;
-    border: 1px solid #ccc;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
+    @page {
+      size: A4;
+      margin-right: 5mm;
+      margin-bottom: 5mm;
+      margin-left: 5mm;    
+    }
 
-  .table th, .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: center;
-    word-wrap: break-word;
-  }
-  .table th {
-    background-color: #001f3f;
-    font-weight: bold;
-    color: #ffffff ;
-  }
-  .title {
-    font-size: 22px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-  }
-  .header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-  .box {
-  display: inline-block;
-  width: 49%; /* Equal width */
-  min-height: 100px; /* Set minimum height instead of fixed height */
-  border: 1px solid #001f3f;
-  padding: 10px;
-  background-color: #ffffff;
-  color: #000;
-  box-sizing: border-box;
-  vertical-align: top;
-}
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 10px; /* Reduced font size */
+      margin: 0;
+      padding: 0;
+    }
 
-  .box-label {
-    background-color: #001f3f;
-    color: #fff;
-    padding: 5px;
-    font-weight: bold;
-    display: block;
-    width: 100%;
-    border-radius: 3px;
-    margin-bottom: 5px;
-  }
-  .amount-box {
-    border: 1px solid #001f3f;
-    padding: 10px;
-    margin-bottom: 10px;
-    background-color: #ffffff;
-    color: #000;
-    box-sizing: border-box;
-     text-align: center; /* Center text */
-  }
-  .amount-box-label,
-  .terms-box-label {
-    background-color: #001f3f;
-    color: #fff;
-    padding: 5px;
-    font-weight: bold;
-    border-radius: 3px;
-    display: block;
-    margin-bottom: 5px;
-    width: 100%;
-    box-sizing: border-box;
-      text-align: center; /* Center label text */
+    .container {
+      padding: 50px;
+      border: 0px solid #ccc;
+      width: 100%;
+      box-sizing: border-box;
+    }
 
-  }
-  .terms-box {
-    display: inline-block;
-    width: 48%;
-    height: 100px;
-    box-sizing: border-box;
-    padding: 10px;
-    margin-top: 10px;
-    vertical-align: top;
-    border: 1px solid #ccc;
-    background-color: #fafafa;
-  }
-  .signature {
-    margin-top: 40px;
-    text-align: right;
-  }
-  .signature-line {
-    display: inline-block;
-    margin-top: 10px;
-    width: 200px;
-    border-bottom: 1px solid #000;
-  }
-</style>
+    header { 
+      position: relative; 
+      width: 100%; 
+      height: 50px; 
+      margin: 25px 25px 0px 15px;
+      text-align: center;
+    }
 
+    header img {
+      max-width: 150px; /* Increase the size of the logo */
+      height: auto;     /* Maintain aspect ratio */
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    header p {
+      position: absolute;
+      right: 0;
+      top: 5;
+      margin: 0;
+      padding-right: 40px;
+      font-weight: bold;
+      font-size: 20px;
+      font-family: 'Calibri'; /* Set the font to Calibri */
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      page-break-inside: auto; /* Allow table to break across pages */
+    }
+
+    .table th, .table td {
+      border: 1px solid #ccc;
+      padding: 6px 8px; /* Reduced padding */
+      text-align: center;
+      word-wrap: break-word;
+      font-size: 10px; /* Smaller font size */
+    }
+
+    .table th {
+      background-color: #001f3f;
+      font-weight: bold;
+      color: #ffffff ;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .header-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .box {
+      display: inline-block;
+      width: 49%; /* Adjust width to avoid overflow */
+      min-height: 100px;
+      border: 1px solid #001f3f;
+      padding: 10px;
+      background-color: #ffffff;
+      color: #000;
+      box-sizing: border-box;
+      vertical-align: top;
+    }
+
+    .box-label {
+      background-color: #001f3f;
+      color: #fff;
+      padding: 5px;
+      font-weight: bold;
+      display: block;
+      width: 100%;
+      border-radius: 3px;
+      margin-bottom: 5px;
+    }
+
+    .amount-box {
+      border: 1px solid #001f3f;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #ffffff;
+      color: #000;
+      box-sizing: border-box;
+      text-align: center; /* Center text */
+    }
+
+    .amount-box-label,
+    .terms-box-label {
+      background-color: #001f3f;
+      color: #fff;
+      padding: 5px;
+      font-weight: bold;
+      border-radius: 3px;
+      display: block;
+      margin-bottom: 5px;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center; 
+    }
+
+    .terms-container {
+      display: flex;
+      flex-wrap: wrap; /* Allow items to wrap if necessary */
+      justify-content: space-between;
+      gap: 20px; /* Add space between the two boxes */
+    }
+
+    .terms-box {
+      flex: 1 1 calc(50% - 20px); /* Flexibly split boxes */
+      min-height: 120px;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #fafafa;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .signature {
+      text-align: right;
+      margin-top: 20px;
+    }
+
+    .signature-line {
+      display: inline-block;
+      width: 200px;
+      border-bottom: 1px solid #000;
+    }
+
+    .signature-img {
+      max-width: 200px;
+    }
+
+    tr {
+      page-break-inside: avoid; /* Prevent row break */
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+   footer {
+      text-align: center;
+      font-size: 10px;
+      background-color: #f8f8f8;
+      margin-top: 70px;
+    }
+
+    footer p {
+      margin: 0;
+    }
+
+    footer a {
+      color: #001f3f;
+      text-decoration: none;
+    }
+
+  </style>
+</head>
 <body>
+  <!-- Title -->
+    <header > 
+      <img src="{{company_path}}" alt="Company Logo">
+      <p>SRIFIN CREDIT PRIVATE LIMITED</p>
+    </header>
+
+
   <div class="container">
-    <!-- Title -->
     <div class="title">Purchase Order</div>
 
     <!-- Vendor Info (Left) and PO Number/Date (Right) -->
-    <div class="header">
+    <div class="header-info">
       <div class="box">
-        <div class="box-label">{{client_name}}</div>
+        <div class="box-label">Invoice : {{client_name}}</div>
         <strong>Address:</strong> {{client_address}}<br />
         <strong>Phone:</strong> {{client_phone_num}}<br />
         <strong>E-Mail:</strong> {{client_email}}<br />
@@ -129,16 +216,16 @@
       </div>
 
       <div style="text-align: right; align-self: flex-start;">
-        <!-- PO Number and Date without box -->
-        <strong>Date:</strong> {{po_date}}<br />  
-        <strong>{{po_num}} </strong>        
+        <strong>Date:</strong> {{formatDateWithMonth po_date}}<br />  
+        <strong>PO #</strong> {{po_num}}
       </div>
+
     </div>
 
     <!-- Client Info (Left) and Shipping Info (Right) -->
-    <div class="header">
+    <div class="header-info">
       <div class="box">
-        <div class="box-label"><strong>Vendor:</strong>{{vendor_name}}</div>
+        <div class="box-label"><strong>Vendor : </strong>{{vendor_name}}</div>
         <strong>Address:</strong> {{vendor_address}}<br />
         <strong>Phone:</strong> {{vendor_phone_num}}<br />
         <strong>E-Mail:</strong> {{vendor_email}}<br />
@@ -146,69 +233,67 @@
       </div>
 
       <div class="box">
-        <div class="box-label">Shipping Address {{shipping_name}}</div>
+        <div class="box-label">Ship To : {{shipping_name}}</div>
         <strong>Address:</strong> {{shipping_address}}<br />
         <strong>Phone:</strong> {{shipping_phone_num}}<br />
-
       </div>
     </div>
 
-    <!-- Item Table -->
-    <table class="table">
-      <thead>
-        <tr>
-          <th style="padding: 8px; text-align: center;">S.NO</th>
-          <th style="padding: 8px; text-align: center;">Description</th>
-          <th style="padding: 8px; text-align: center;">Quantity</th>
-          <th style="padding: 8px; text-align: center;">Unit Price</th>
-          <th style="padding: 8px; text-align: center;">Total </th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each line_items}}
-        <tr>
-          <td>{{increment @index}}</td>
-          <td>{{asset_name}}</td>
-          <td>{{quantity}}</td>
-          <td>{{unit_price}}</td>
-          <td>₹ {{multiply quantity unit_price}}</td>
+   <!-- Combined Item and Summary Table -->
+<table class="table" style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="padding: 8px; text-align: center;">S.NO</th>
+      <th style="padding: 8px; text-align: center;">Description</th>
+      <th style="padding: 8px; text-align: center;">Quantity</th>
+      <th style="padding: 8px; text-align: center;">Unit Price</th>
+      <th style="padding: 8px; text-align: center;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each line_items}}
+    <tr>
+      <td style="text-align: center;">{{increment @index}}</td>
+      <td>{{asset_name}}</td>
+      <td style="text-align: center;">{{quantity}}</td>
+      <td style="text-align: right;">₹&nbsp;{{formatCurrency unit_price}}</td>
+      <td style="text-align: right;">₹&nbsp;{{formatCurrency (multiply quantity unit_price)}}</td>
+    </tr>
+    {{/each}}
 
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
+    <!-- Summary Rows with labels aligned left -->
+    <tr>
+      <td colspan="2" style="font-weight: bold; text-align: left;">Subtotal</td>
+      <td colspan="3" style="text-align: right;">₹&nbsp;{{formatCurrency totals.subtotal}}</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; text-align: left;">IGST@{{gst}}%</td>
+      <td colspan="3" style="text-align: right;">₹&nbsp;{{formatCurrency totals.gstAmount}}</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; text-align: left;">CGST@9%</td>
+      <td colspan="3" style="text-align: right;">₹&nbsp;{{formatCurrency cgst_total}}</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; text-align: left;">SGST@9%</td>
+      <td colspan="3" style="text-align: right;">₹&nbsp;{{formatCurrency sgst_total}}</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; text-align: left;">Shipping</td>
+      <td colspan="3" style="text-align: right;">₹&nbsp;{{formatCurrency shipping}}</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; text-align: left;">Round Off</td>
+      <td colspan="3" style="text-align: right;">₹&nbsp;{{formatCurrency round_off}}</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-weight: bold; text-align: left;">Total</td>
+      <td colspan="3" style="text-align: right;">₹&nbsp;{{formatCurrency totals.grandTotal}}</td>
+    </tr>
+  </tbody>
+</table>
 
-    <!-- Combined Summary Table -->
-    <table class="table">
-      <tr>
-        <td style="text-align: left; font-weight: bold;">Subtotal:</td>
-        <td style="text-align: right;">₹{{ totals.subtotal}}</td>
-      </tr>
-      <tr>
-        <td style="text-align: left; font-weight: bold;">IGST@{{gst}}%:</td>
-        <td style="text-align: right;">₹{{ totals.gstAmount}}</td>
-      </tr>
-      <tr>
-        <td style="text-align: left; font-weight: bold;">CGST@9%:</td>
-        <td style="text-align: right;">{{cgst_total}}</td>
-      </tr>
-      <tr>
-        <td style="text-align: left; font-weight: bold;">sGST@9%:</td>
-        <td style="text-align: right;">{{sgst_total}}</td>
-      </tr>
-      <tr>
-        <td style="text-align: left; font-weight: bold;">Shipping:</td>
-        <td style="text-align: right;">{{shipping}}</td>
-      </tr>
-      <tr>
-        <td style="text-align: left; font-weight: bold;">Round Off:</td>
-        <td style="text-align: right;">{{round_off}}</td>
-      </tr>
-      <tr>
-        <td style="text-align: left; font-weight: bold;">Total:</td>
-        <td style="text-align: right;">₹{{totals.grandTotal}}</td>
-      </tr>
-    </table>
+
 
     <!-- Amount in Words -->
     <div class="amount-box">
@@ -217,23 +302,32 @@
     </div>
 
     <!-- Terms & Conditions and Delivery Terms -->
-    <div>
+    <div class="terms-container">
       <div class="terms-box">
         <div class="terms-box-label">Terms & Conditions:</div>
-        Payment:{{payment_terms}} <br/>
-        Warranty:{{warranty}}
+          <span><strong>Payment:</strong>{{payment_terms}}</span>
+        <hr style="border: 0; border-top: 1px solid #000; margin: 8px 0;" />
+        <span><strong>Warranty:</strong>{{warranty}}</span>
       </div>
       <div class="terms-box">
         <div class="terms-box-label">Delivery Terms</div>
-        {{delivery_terms}} 
+      <span><strong>Delivery:</strong> {{delivery_terms}}</span> 
       </div>
+
     </div>
 
     <!-- Signature -->
     <div class="signature">
-      <strong>Authorized Signatory:</strong>
+      <div>
+        <img src="{{image_path}}" alt="Logo" class="signature-img"/>
+      </div>
+      <strong>Authorized Signatory</strong>
     </div>
   </div>
+  <footer>
+    <p>Unit No. 509, 5th Floor, Gowra Fountainhead, Sy. No. 83(P) & 84(P), Patrika Nagar, Madhapur, Hitech City, Hyderabad-500081, Telangana. <br />
+    Phone: 040 45474619 | E-mail: <a href="mailto:info@srifincredit.com">info@srifincredit.com</a> | Website: <a href="http://www.srifincredit.com">www.srifincredit.com</a> | CIN: U65920TG2022PTC168114</p>
+  </footer>
 </body>
 
 </html>

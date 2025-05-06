@@ -10,29 +10,63 @@ const { Op } = require("sequelize");
 
 
 // Route to fetch asset details based on assetId
-router.get("/details/:assetId", async (req, res) => {
-    try {
-      const { assetId } = req.params;
+// router.get("/details/:assetId", async (req, res) => {
+//   console.log("assetId",assetId);
+//     try {
+//       const { assetId } = req.params;
   
-      const asset = await assetmaster.findOne({
-        where: { asset_id: assetId },
-        attributes: ["asset_id", "brand", "model", "imei_num"],
-        include: [
-          {
-            model: assignmentdetails,
-            as: "assignmentdetails",
-            include: [{ model: userlogins, as: "system", attributes: ["emp_name"] }],
-          },
-        ],
-      });
+//       const asset = await assetmaster.findOne({
+//         where: { asset_id: assetId },
+//         attributes: ["asset_id", "brand", "model", "imei_num"],
+//         include: [
+//           {
+//             model: assignmentdetails,
+//             as: "assignmentdetails",
+//             include: [{ model: userlogins, as: "system", attributes: ["emp_name"] }],
+//           },
+//         ],
+//       });
   
-      if (!asset) return res.status(404).json({ error: "Asset not found" });
+//       if (!asset) return res.status(404).json({ error: "Asset not found" });
   
-      res.json(asset);
-    } catch (error) {
-      console.error("Error fetching asset details:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+//       res.json(asset);
+//     } catch (error) {
+//       console.error("Error fetching asset details:", error);
+//       res.status(500).json({ error: "Internal Server Error" });
+//     }
+// });
+router.get("/details/:encodedAssetIds", async (req, res) => {
+
+  const { encodedAssetIds } = req.params;
+  console.log("encodedAssetId:", encodedAssetIds);  // Log the encoded value
+
+  try {
+    // Decode the assetId if necessary (if it contains encoded characters like '%2F')
+    const decodedAssetId = decodeURIComponent(encodedAssetIds);
+    console.log("Decoded assetId:", decodedAssetId);  // Log the decoded assetId
+
+    // Query the database using the decoded assetId
+    const asset = await assetmaster.findOne({
+      where: { asset_id: decodedAssetId },  // Use the decoded assetId for the query
+      attributes: ["asset_id", "brand", "model", "imei_num"],
+      include: [
+        {
+          model: assignmentdetails,
+          as: "assignmentdetails",
+          include: [{ model: userlogins, as: "system", attributes: ["emp_name"] }],
+        },
+      ],
+    });
+
+    if (!asset) {
+      return res.status(404).json({ error: "Asset not found" });
     }
+
+    res.json(asset);
+  } catch (error) {
+    console.error("Error fetching asset details:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // Route to get all users

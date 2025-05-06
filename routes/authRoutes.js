@@ -3,7 +3,8 @@ const express = require("express");
 // const multer = require("multer"); // ✅ Import multer
 
 const { login } = require("../controllers/authController");
-const { forgotPassword, resetPassword } = require("../controllers/forgotpassword");
+const ForgotRoutes = require("../controllers/forgotpassword");
+const ResetRoutes = require("../controllers/Reset_Pass");
 
 const assetRoutes = require("../controllers/dashboard"); // ✅ Import assets.js
 const AssetListRoutes = require("../controllers/assetlist");
@@ -18,19 +19,24 @@ const FreePoolRoutes = require("../controllers/Approval/FreePool")
 const PurchaseOrderRoutes = require("../controllers/Approval/PurchaseOrder")
 const InvoiceApproveRoutes = require("../controllers/Approval/Invoice")
 const PaymentRoutes = require("../controllers/Approval/Payment")
+const BulkRoute = require("../controllers/Approval/bulk_upload")
 
 //po
-// const { generatePreview, submitPurchaseOrder, getPOPreview, fetchassettype, fetchGSTRates } = require("../controllers/CreatePO"); // ✅ PO-related routes
 const CreatePORoutes = require("../controllers/CreatePO")
 const InvoiceRoutes = require("../controllers/New_Asset/Upload_Invoice")
 const RecieptRoutes = require("../controllers/New_Asset/Upload_Reciept")
+const DepreciationRoutes = require("../controllers/New_Asset/AssetDepreciation")
+
+//bulk
+const BulkRoutes = require("../controllers/BulkUpload")
+const RoleRoutes = require("../controllers/RoleBase/RoleChangeController")
 
 const router = express.Router();
 // const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/login", login);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+router.use("/forgot", ForgotRoutes);
+router.use("/reset", ResetRoutes);
 
 router.use("/dashboard", assetRoutes);
 router.use("/assetlist", AssetListRoutes);
@@ -44,9 +50,14 @@ router.use("/freeapproval", FreePoolRoutes);
 router.use("/purchaseorder", PurchaseOrderRoutes); 
 router.use("/invoice", InvoiceApproveRoutes); 
 router.use("/payment", PaymentRoutes); 
+router.use("/bulkupload", BulkRoute); 
 
 router.use("/CreatePO", CreatePORoutes); 
 router.use("/invoices", InvoiceRoutes); 
 router.use("/reciept", RecieptRoutes); 
+router.use("/depreciation", DepreciationRoutes); 
+
+router.use("/bulk", BulkRoutes); 
+router.use("/role", RoleRoutes); 
 
 module.exports = router;

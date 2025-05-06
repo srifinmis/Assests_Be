@@ -20,7 +20,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     passwd_hash: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true
     },
     created_at: {
       type: DataTypes.DATE,
@@ -74,6 +74,14 @@ module.exports = function(sequelize, DataTypes) {
     },
     state: {
       type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    role_ids_assigned: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    states_assigned: {
+      type: DataTypes.TEXT,
       allowNull: true
     }
   }, {

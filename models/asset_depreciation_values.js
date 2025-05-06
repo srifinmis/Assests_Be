@@ -38,6 +38,18 @@ module.exports = function(sequelize, DataTypes) {
     year_5_6_val: {
       type: DataTypes.DECIMAL,
       allowNull: true
+    },
+    asset_value: {
+      type: DataTypes.DECIMAL,
+      allowNull: true
+    },
+    salvage_value: {
+      type: DataTypes.DECIMAL,
+      allowNull: true
+    },
+    depreciation_value: {
+      type: DataTypes.DECIMAL,
+      allowNull: true
     }
   }, {
     sequelize,

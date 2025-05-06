@@ -119,6 +119,14 @@ module.exports = function(sequelize, DataTypes) {
     payment_receipt_url: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    bulk_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'bulk_upload_staging',
+        key: 'bulk_id'
+      }
     }
   }, {
     sequelize,
