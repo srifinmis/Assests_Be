@@ -39,9 +39,6 @@ const generatePOPDF = async (poData) => {
     } else {
       poData.amount_in_words = '-';
     }
-    console.log('Total received:', total);
-
-
 
     // Add default values
     poData.vendor_address = poData.vendor_address || 'Not Provided';
@@ -90,7 +87,6 @@ const generatePOPDF = async (poData) => {
 
     await browser.close();
 
-    console.log(`✅ PDF generated at path: ${pdfPath}`);
     return pdfPath;
   } catch (error) {
     console.error('❌ Error generating PDF:', error);

@@ -113,8 +113,6 @@ async function calculateDepreciation(asset, transaction) {
     const gst = (cgst + sgst) / 2;
     const total_price_incl_gst = unit_price + (unit_price * (gst / 100));
 
-    console.log(`✅ Total Price (Incl. GST): ${total_price_incl_gst}`);
-
     // ✅ Fetch Asset Type Data
     const assetType = await asset_types.findOne({
       where: { asset_type: asset.asset_type },
@@ -130,8 +128,6 @@ async function calculateDepreciation(asset, transaction) {
     const salvage_percent = Number(assetType.salvage_percent) || 0;
     const depreciation_percent = Number(assetType.depreciation_percent) || 0;
 
-    console.log(`✅ Salvage %: ${salvage_percent}, Depreciation %: ${depreciation_percent}`);
-
     // ✅ Fetch Warranty Period
     const warrantyYears = Number(asset.warranty_years) || 0;
     if (warrantyYears <= 0) {
@@ -139,13 +135,9 @@ async function calculateDepreciation(asset, transaction) {
       return;
     }
 
-    console.log(`✅ Warranty Period: ${warrantyYears} years`);
-
     // ✅ Calculate Salvage Value & Depreciation
     const salvageValue = total_price_incl_gst - (total_price_incl_gst * (salvage_percent / 100));
     const depreciationPerYear = salvageValue * (depreciation_percent / 100);
-
-    console.log(`✅ Salvage Value: ${salvageValue}, Yearly Depreciation: ${depreciationPerYear}`);
 
     // ✅ Generate Depreciation Values Based on Warranty Period
     let depreciationValues = {};
@@ -159,8 +151,6 @@ async function calculateDepreciation(asset, transaction) {
         depreciationValues[`year_${year}_${year + 1}_val`] = 0; // After warranty, value is 0
       }
     }
-
-    console.log("✅ Depreciation Values:", depreciationValues);
 
     // ✅ Insert into `asset_depreciation_values`
     await asset_depreciation_values.create(

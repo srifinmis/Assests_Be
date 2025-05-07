@@ -128,7 +128,6 @@ router.get("/po_details/:poNumber", async (req, res) => {
 router.get('/next-asset-ids/:po_num', async (req, res) => {
   const { po_num } = req.params;
   poNumber = decodeURIComponent(po_num).trim();
- console.log("po_num",po_num);
   try {
     // Step 1: Get asset_type from po_processing for the given po_num
     const poData = await po_processing.findOne({ where: { po_num }, raw: true });
@@ -220,9 +219,6 @@ router.get('/next-asset-ids/:po_num', async (req, res) => {
 
 // routes/invoices.js
 router.post("/upload_receipt", upload.single("paymentFile"), async (req, res) => {
-  console.log("Body:", req.body);
-  console.log("File:", req.file);
-
   const transaction = await sequelize.transaction();
 
   try {

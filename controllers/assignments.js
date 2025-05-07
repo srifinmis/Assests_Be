@@ -12,7 +12,6 @@ router.get("/", async (req, res) => {
       const assignments = await assignmentdetails.findAll({
         include: [{ model: assetmaster, as: "asset" }, { model: userlogins, as: "system" }], // ✅ Correct alias
       });
-      console.log(models);
       res.json(assignments);
     } catch (error) {
       res.status(500).json({ error: error.message });

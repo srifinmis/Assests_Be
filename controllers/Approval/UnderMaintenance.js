@@ -86,191 +86,6 @@ router.get("/free-under-assets", async (req, res) => {
   }
 });
 
-// router.post('/action', async (req, res) => {
-//   const { requestNums, action, approved_by, remarks } = req.body;
-
-//   if (!requestNums || !action || !approved_by) {
-//     return res.status(400).json({ message: 'Missing required parameters' });
-//   }
-
-//   if (action === 'rejected' && !remarks) {
-//     return res.status(400).json({ message: 'Remarks are mandatory for rejection' });
-//   }
-
-//   const approvalStatus = action === 'approved' ? 'Accepted' : 'Rejected';
-//   const approvalDate = new Date().toISOString();
-//   const remarksToUpdate = action === 'rejected' ? remarks : null;
-
-//   const assignedType = action === 'approved' ? 'Accepted' : 'Rejected';
-//   const assignmentStatus = action === 'approved' ? 'Under Maintenance' : 'Rejected';
-
-//   const transaction = await sequelize.transaction();
-
-//   try {
-//     // Process each request number in bulk
-//     for (let requestNum of requestNums) {
-//       const approverRecord = await approver_staging.findOne({
-//         where: { request_num: requestNum, approval_status: 'Pending' },
-//         transaction,
-//       });
-
-//       if (!approverRecord) {
-//         await transaction.rollback();
-//         return res.status(404).json({ message: `Approver record not found for request ${requestNum}` });
-//       }
-
-//       const assignmentId = approverRecord.assignment_id;
-
-//       const approverUser = await models.userlogins.findOne({
-//         where: { emp_id: approved_by },
-//         attributes: ["emp_id", "emp_name", "email"],
-//         transaction,
-//       });
-
-//       if (!approverUser) {
-//         await transaction.rollback();
-//         return res.status(404).json({ message: "Approver user not found." });
-//       }
-
-//       // Fetch the requested_by user
-//       const requestedByUser = await models.userlogins.findOne({
-//         where: { emp_id: approverRecord.requested_by },
-//         attributes: ["emp_id", "emp_name", "email"],
-//         transaction,
-//       });
-
-//       await approver_staging.update(
-//         {
-//           approved_by,
-//           approved_at: approvalDate,
-//           approval_status: approvalStatus,
-//           remarks: remarksToUpdate,
-//         },
-//         {
-//           where: { request_num: requestNum, approval_status: 'Pending' },
-//           transaction,
-//         }
-//       );
-
-//       await assignmentdetails_staging.update(
-//         {
-//           assigned_type: assignedType,
-//           assignment_status: assignmentStatus,
-//           remarks: remarksToUpdate,
-//           updatedat: approvalDate,
-//         },
-//         {
-//           where: { assignment_id: assignmentId, assignment_status: 'In Progress' },
-//           transaction,
-//         }
-//       );
-
-//       if (action === 'approved') {
-//         const assignmentExists = await assignmentdetails.findOne({
-//           where: { assignment_id: assignmentId },
-//           transaction,
-//         });
-
-//         if (assignmentExists) {
-//           await assignmentdetails.update(
-//             {
-//               assigned_type: assignedType,
-//               assignment_status: assignmentStatus,
-//               remarks: remarksToUpdate,
-//               updatedat: approvalDate,
-//             },
-//             {
-//               where: { assignment_id: assignmentId },
-//               transaction,
-//             }
-//           );
-//         } else {
-//           const assignmentRow = await assignmentdetails_staging.findOne({
-//             where: { assignment_id: assignmentId },
-//             transaction,
-//           });
-
-//           if (assignmentRow) {
-//             await assignmentdetails.create({
-//               assignment_id: assignmentRow.assignment_id,
-//               asset_id: assignmentRow.asset_id,
-//               system_id: assignmentRow.system_id,
-//               assigned_date: assignmentRow.assigned_date,
-//               assignment_status: 'Under Maintenance',
-//               branchid_name: assignmentRow.branchid_name,
-//               regionid_name: assignmentRow.regionid_name,
-//               updatedat: approvalDate,
-//               remarks: remarksToUpdate,
-//             }, { transaction });
-//           }
-//         }
-//       }
-
-//       // EMAIL LOGIC
-//       if (action === 'approved') {
-//         // Send approval email to approver
-//         await sendEmail({
-//           to: approverUser.email,
-//           subject: "Asset Under Maintenance Request Approved",
-//           html: `
-//             <p>Hello ${approverUser.emp_name},</p>
-//             <p>Your approval for asset under maintenance request <strong>${requestNum}</strong> has been successfully processed.</p>
-//             <p>Remarks: ${remarks || "No remarks provided."}</p>
-//             <p>Regards,<br/>Asset Management Team</p>
-//           `,
-//         });
-
-//         // Send approval email to requestor
-//         if (requestedByUser) {
-//           await sendEmail({
-//             to: requestedByUser.email,
-//             subject: "Your Asset Under Maintenance Request Approved",
-//             html: `
-//               <p>Hello ${requestedByUser.emp_name},</p>
-//               <p>Your asset under maintenance request <strong>${requestNum}</strong> has been <b>approved</b>.</p>
-//               <p>Remarks: ${remarks || "No remarks provided."}</p>
-//               <p>Regards,<br/>Asset Management Team</p>
-//             `,
-//           });
-//         }
-//       } else if (action === 'rejected') {
-//         // Send rejection email to approver
-//         await sendEmail({
-//           to: approverUser.email,
-//           subject: "Asset Under Maintenance Request Rejected",
-//           html: `
-//             <p>Hello ${approverUser.emp_name},</p>
-//             <p>Your rejection for asset under maintenance request <strong>${requestNum}</strong> has been successfully processed.</p>
-//             <p>Remarks: ${remarks}</p>
-//             <p>Regards,<br/>Asset Management Team</p>
-//           `,
-//         });
-
-//         // Send rejection email to requestor
-//         if (requestedByUser) {
-//           await sendEmail({
-//             to: requestedByUser.email,
-//             subject: "Your Asset Under Maintenance Request Rejected",
-//             html: `
-//               <p>Hello ${requestedByUser.emp_name},</p>
-//               <p>Your asset under maintenance request <strong>${requestNum}</strong> has been <b>rejected</b>.</p>
-//               <p>Remarks: ${remarks}</p>
-//               <p>Regards,<br/>Asset Management Team</p>
-//             `,
-//           });
-//         }
-//       }
-//     }
-
-//     await transaction.commit();
-//     res.status(200).json({ message: `All records ${approvalStatus.toLowerCase()} successfully.` });
-//   } catch (error) {
-//     console.error("Error processing bulk action:", error);
-//     await transaction.rollback();
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// });
-
 router.post('/action', async (req, res) => {
   const { requestNums, action, approved_by, remarks } = req.body;
 
@@ -378,16 +193,19 @@ router.post('/action', async (req, res) => {
           // If asset_id exists, update the record in assignmentdetails
           await assignmentdetails.update(
             {
-              assigned_type: assignedType,
-              assignment_status: assignmentStatus,
+              assignment_id: assignmentId, // ✅ New ID from staging
+              system_id: assignmentRow.system_id,
+              assigned_date: assignmentRow.assigned_date,
+              assignment_status: assignmentStatus, // Usually 'Assigned'
+              branchid_name: assignmentRow.branchid_name,
+              regionid_name: assignmentRow.regionid_name,
               remarks: remarksToUpdate,
-              updatedat: approvalDate,
+              updatedat: approvalDate, // ✅ Use only this
             },
             {
               where: { asset_id: assignmentRow.asset_id },
               transaction,
-            }
-          );
+          });
         } else {
           // If asset_id doesn't exist, create a new record
           await assignmentdetails.create({

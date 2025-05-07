@@ -157,7 +157,6 @@ if (category === "free-pool" || category === "total-assets") {
     // Merge all lists
     let finalAssets = [...formattedAssets, ...freePoolFormatted];
 
-    console.log("Final Assets:", finalAssets);
     res.json(finalAssets);
   } catch (error) {
     console.error("Error fetching asset details:", error);

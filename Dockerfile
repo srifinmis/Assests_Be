@@ -8,13 +8,13 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN npm install --production
+RUN npm install
 
 # Copy the entire project
 COPY . .
 
 # Expose the port (adjust based on your app)
-EXPOSE 5000
+EXPOSE 2727
 
 # Start the application
 CMD ["node", "server.js"]

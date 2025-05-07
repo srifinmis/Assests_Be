@@ -11,7 +11,6 @@ const { Op } = require("sequelize");
 
 // Route to fetch asset details based on assetId
 // router.get("/details/:assetId", async (req, res) => {
-//   console.log("assetId",assetId);
 //     try {
 //       const { assetId } = req.params;
   
@@ -38,12 +37,10 @@ const { Op } = require("sequelize");
 router.get("/details/:encodedAssetIds", async (req, res) => {
 
   const { encodedAssetIds } = req.params;
-  console.log("encodedAssetId:", encodedAssetIds);  // Log the encoded value
 
   try {
     // Decode the assetId if necessary (if it contains encoded characters like '%2F')
     const decodedAssetId = decodeURIComponent(encodedAssetIds);
-    console.log("Decoded assetId:", decodedAssetId);  // Log the decoded assetId
 
     // Query the database using the decoded assetId
     const asset = await assetmaster.findOne({
@@ -86,7 +83,6 @@ router.get("/users", async (req, res) => {
 router.post("/assign", async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-        console.log("Received request body:", req.body);
 
         const { asset_id, assigned_to, requested_by } = req.body;
 
@@ -137,9 +133,7 @@ router.post("/assign", async (req, res) => {
                 <p>Please review and approve.</p>
             `,
         });
-
-        console.log(`Approval request sent to: ${approverDetails.email}`);
-
+        
         // 🔹 Insert into assignmentdetails_staging after successful email sending
         const asset = await models.assignmentdetails_staging.create(
             {

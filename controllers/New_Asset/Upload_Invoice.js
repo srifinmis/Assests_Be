@@ -314,9 +314,6 @@ router.get('/locations', async (req, res) => {
 
 // routes/invoices.js
 router.post("/upload_invoice", upload.single("invoiceFile"), async (req, res) => {
-  console.log("Body:", req.body);
-  console.log("File:", req.file);
-
   const transaction = await sequelize.transaction();
 
   try {

@@ -9,8 +9,6 @@ const sendEmail = require("../utils/sendEmail");
 router.post("/maintenance", async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-        console.log("Received request body:", req.body);
-
         const { asset_id, requested_by } = req.body;
 
         if (!asset_id || !requested_by) {

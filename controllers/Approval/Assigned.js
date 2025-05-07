@@ -188,16 +188,19 @@
             // If asset_id exists, update the record in assignmentdetails with 'Assigned' status
             await assignmentdetails.update(
               {
-                assigned_type: assignedType,
-                assignment_status: assignmentStatus,
+                assignment_id: assignmentId, // ✅ New ID from staging
+                system_id: assignmentRow.system_id,
+                assigned_date: assignmentRow.assigned_date,
+                assignment_status: assignmentStatus, // Usually 'Assigned'
+                branchid_name: assignmentRow.branchid_name,
+                regionid_name: assignmentRow.regionid_name,
                 remarks: remarksToUpdate,
-                updatedat: approvalDate,
+                updatedat: approvalDate, // ✅ Use only this
               },
               {
                 where: { asset_id: assignmentRow.asset_id },
                 transaction,
-              }
-            );
+            });            
           } else {
             // If asset_id doesn't exist, create a new record with 'Assigned' status
             await assignmentdetails.create({

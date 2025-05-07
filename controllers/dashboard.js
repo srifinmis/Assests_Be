@@ -122,8 +122,6 @@ router.get("/summary", async (req, res) => {
     const statesAssignedRaw = req.headers.statesassigned;
     const statesAssigned = statesAssignedRaw ? statesAssignedRaw.split(",") : [];
 
-    console.log("statesAssigned from header:", statesAssigned);
-
     if (statesAssigned.length === 0) {
       return res.status(400).json({ error: "No states assigned provided." });
     }

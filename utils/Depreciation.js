@@ -68,18 +68,12 @@ async function calculateDepreciation(asset, transaction) {
 
     const salvage_percent = Number(typeData.salvage_percent) || 0;
     const depreciation_percent = Number(typeData.depreciation_percent) || 0;
-    console.log("salvage_percent:",salvage_percent);
-    console.log("depreciation_percent:",depreciation_percent);
 
     const salvageValue = total_price_incl_gst - (total_price_incl_gst * (salvage_percent / 100));
-    const depreciationPerYear = +(salvageValue * (depreciation_percent / 100)).toFixed(2);
-    console.log("salvageValue:",salvageValue);
-    console.log("depreciationPerYear:",depreciationPerYear);
+    const depreciationPerYear = +(salvageValue * (depreciation_percent / 100)).toFixed(2); 
 
     let depreciationValues = {};
-    let remainingValue = total_price_incl_gst;
-    console.log("depreciationValueslet:",depreciationValues);
-    console.log("remainingValuelet:",remainingValue);
+    let remainingValue = total_price_incl_gst; 
 
     for (let year = 1; year <= 5; year++) {
       const yearKey = `year_${year}_${year + 1}_val`;
@@ -87,17 +81,9 @@ async function calculateDepreciation(asset, transaction) {
       if (year <= warrantyYears) {
         remainingValue = +(remainingValue - depreciationPerYear).toFixed(2);
         depreciationValues[yearKey] = Math.max(remainingValue, 0);
-
-        console.log(`🟢 Year ${year}:`);
-        console.log(`   Depreciation Applied`);
-        console.log(`   Remaining Value: ₹${remainingValue}`);
-        console.log(`   Stored as '${yearKey}': ₹${depreciationValues[yearKey]}`);
+ 
       } else {
-        depreciationValues[yearKey] = 0;
-
-        console.log(`⚪ Year ${year}:`);
-        console.log(`   Beyond Warranty Period`);
-        console.log(`   Stored as '${yearKey}': ₹0`);
+        depreciationValues[yearKey] = 0; 
       }
     }
 
@@ -115,8 +101,6 @@ async function calculateDepreciation(asset, transaction) {
       },
       { transaction }
     );
-
-    console.log(`✅ Depreciation calculated for asset_id: ${asset.asset_id}`);
 
   } catch (error) {
     console.error("❌ Error calculating depreciation for asset_id:", asset.asset_id, error);

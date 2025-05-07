@@ -13,8 +13,6 @@ router.get("/", async (req, res) => {
     const employees = await userlogins.findAll({
       attributes: ["emp_id", "emp_name", "email"], // Fetch only required fields
     });
-    console.log("Fetched Employees:", employees);
-
     res.json(employees);
   } catch (error) {
     res.status(500).json({ error: "Error fetching employee data" });

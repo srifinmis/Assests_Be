@@ -62,7 +62,6 @@ router.get("/asset-types", async (req, res) => {
 router.post('/preview', async (req, res) => {
   try {
     const poData = req.body;
-    console.log("req.body",req.body);
     if (!poData || !poData.po_num) {
       return res.status(400).json({ message: 'Missing PO data or PO number' });
     }
@@ -86,7 +85,6 @@ router.post('/preview', async (req, res) => {
 router.post("/request_po", async (req, res) => {
   try {
     const poData = req.body;
-    console.log("Incoming PO:", poData);
 
     const {
       po_num,
