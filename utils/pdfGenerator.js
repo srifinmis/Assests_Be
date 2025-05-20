@@ -56,7 +56,7 @@ const generatePOPDF = async (poData) => {
 
     const templatePath = path.join(__dirname, '../templates/po_template.hbs');
 
-    if (!fs.existsSync(templatePath)) {
+    if (!await fs.pathExists(templatePath)) {
       throw new Error(`Template not found at: ${templatePath}`);
     }
 
@@ -71,13 +71,14 @@ const generatePOPDF = async (poData) => {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'load' });
 
-    const pdfFolder = path.join(__dirname, '../pdf');
-    if (!fs.existsSync(pdfFolder)) {
-      fs.mkdirSync(pdfFolder, { recursive: true });
-    }
+    // Create pdf directory if it doesn't exist
+    const pdfFolder = path.join(__dirname, 'pdf');
+    await fs.ensureDir(pdfFolder);
 
-    const pdfFileName = `po_${poNum.replace(/\.pdf$/, '')}.pdf`;
-    const pdfPath = path.posix.join(pdfFolder, pdfFileName);
+    // Sanitize poNum for filename
+    const sanitizedPONum = poNum.replace(/[^a-zA-Z0-9-]/g, "-");
+    const pdfFileName = `po_${sanitizedPONum}.pdf`;
+    const pdfPath = path.join(pdfFolder, pdfFileName);
 
     await page.pdf({
       path: pdfPath,

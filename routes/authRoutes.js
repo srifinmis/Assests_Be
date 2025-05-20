@@ -31,6 +31,8 @@ const DepreciationRoutes = require("../controllers/New_Asset/AssetDepreciation")
 const BulkRoutes = require("../controllers/BulkUpload")
 const RoleRoutes = require("../controllers/RoleBase/RoleChangeController")
 
+const PurchaseOrderApprovalRoutes = require("../controllers/Approval/PurchaseOrder");
+
 const router = express.Router();
 // const upload = multer({ storage: multer.memoryStorage() });
 
@@ -52,7 +54,8 @@ router.use("/invoice", InvoiceApproveRoutes);
 router.use("/payment", PaymentRoutes); 
 router.use("/bulkupload", BulkRoute); 
 
-router.use("/CreatePO", CreatePORoutes); 
+router.use("/CreatePO", CreatePORoutes);
+router.use("/approval/purchaseorder", PurchaseOrderApprovalRoutes);
 router.use("/invoices", InvoiceRoutes); 
 router.use("/reciept", RecieptRoutes); 
 router.use("/depreciation", DepreciationRoutes); 

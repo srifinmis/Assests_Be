@@ -2,8 +2,8 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { uploadToS3 } = require("../../utils/s3Service"); // ✅ Add this
-// const { v4: uuidv4 } = require("uuid");
+const path = require('path');
+const fs = require('fs-extra');
 const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
 const sendEmail = require("../../utils/sendEmail");
@@ -23,8 +23,33 @@ const {
   userlogins
 } = models;
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+// Configure multer for local storage
+const storage = multer.diskStorage({
+  destination: async function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../../utils/uploads');
+    await fs.ensureDir(uploadDir);
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const po_number = req.body.po_number;
+    const sanitizedPONum = po_number.replace(/[^a-zA-Z0-9-]/g, "-");
+    cb(null, `${sanitizedPONum}_invoice_${Date.now()}.pdf`);
+  }
+});
+
+const upload = multer({ 
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
 
 // router.get('/po_no', async (req, res) => {
 //   try {
@@ -313,178 +338,90 @@ router.get('/locations', async (req, res) => {
 });
 
 // routes/invoices.js
-router.post("/upload_invoice", upload.single("invoiceFile"), async (req, res) => {
-  const transaction = await sequelize.transaction();
-
+router.post("/upload", upload.single("invoice"), async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
     const {
+      po_number,
       invoice_number,
       invoice_date,
-      po_number,
+      invoice_amount,
+      gst_amount,
+      total_amount,
       requested_by,
-      base_location,
-      state,
-      Warranty_status,
-      assetData,
-      asset_type,
     } = req.body;
 
-    const file = req.file;
-
-    if (!po_number || !invoice_number || !invoice_date || !requested_by || !file) {
-      return res.status(400).json({ error: "Missing required fields or file." });
+    // Validate required fields
+    if (!po_number || !invoice_number || !invoice_date || !invoice_amount || !requested_by) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const validExtensions = ["pdf"];
-    const fileExtension = file.originalname.split(".").pop().toLowerCase();
-
-    if (!validExtensions.includes(fileExtension)) {
-      return res.status(400).json({ error: "❌ Invalid file type. Only PDF files are allowed." });
-    }
-
-    let parsedAssetData = [];
-
-    if (assetData && base_location && state && asset_type) {
-      // Parse asset data only if asset creation is intended
-      parsedAssetData = JSON.parse(assetData);
-
-      const serialNumbersToCheck = parsedAssetData
-        .map((item) => item.serial_no?.trim())
-        .filter(Boolean);
-
-      const [existingFromAssetmaster, existingFromStaging] = await Promise.all([
-        assetmaster.findAll({
-          where: {
-            imei_num: {
-              [Op.in]: serialNumbersToCheck,
-            },
-          },
-          attributes: ["imei_num"],
-        }),
-        assetmaster_staging.findAll({
-          where: {
-            imei_num: {
-              [Op.in]: serialNumbersToCheck,
-            },
-          },
-          attributes: ["imei_num"],
-        }),
-      ]);
-
-      const existingSerials = new Set([
-        ...existingFromAssetmaster.map((row) => row.imei_num),
-        ...existingFromStaging.map((row) => row.imei_num),
-      ]);
-
-      if (existingSerials.size > 0) {
-        await transaction.rollback();
-        return res.status(400).json({
-          message: "Duplicate serial numbers found in database.",
-          duplicateSerials: Array.from(existingSerials),
-        });
-      }
-    }
-
-    const s3Key = `IT_Asset_Management/Invoices/${po_number}_invoice_${Date.now()}.pdf`;
-    const s3Url = await uploadToS3(file.buffer, s3Key, file.mimetype);
-
-    // Update PO invoice fields
-    await po_processing_staging.update(
-      {
-        invoice_num: invoice_number,
-        invoice_date: invoice_date,
-        invoice_url: s3Url,
-        updated_at: new Date(),
-      },
-      { where: { po_num: po_number }, transaction }
-    );
-
-    // Insert asset data only if available
-    if (parsedAssetData.length > 0) {
-      for (const item of parsedAssetData) {
-        await assetmaster_staging.create(
-          {
-            asset_id: item.asset_id,
-            asset_type: asset_type,
-            brand: item.brand,
-            model: item.model,
-            imei_num: item.serial_no,
-            warranty_status:Warranty_status,
-            po_num: po_number,
-            po_date: invoice_date,
-            base_location: base_location,
-            state: state,
-          },
-          { transaction }
-        );
-      }
-    }
-
-    const requestor = await userlogins.findOne({
-      where: { emp_id: requested_by },
-      attributes: ["emp_id", "emp_name", "email"],
+    // Check if PO exists and is not already invoiced
+    const existingInvoice = await invoice_assignment_staging.findOne({
+      where: { po_num: po_number }
     });
 
-    if (!requestor) {
-      await transaction.rollback();
-      return res.status(404).json({ error: "Requestor not found." });
+    if (existingInvoice) {
+      return res.status(400).json({ error: "Invoice already exists for this PO" });
     }
 
-    const approver = await userlogins.findOne({
+    // Get the local file path
+    const localFilePath = req.file.path;
+    const fileName = path.basename(localFilePath);
+    const fileUrl = `/utils/uploads/${fileName}`;
+
+    // Create invoice record
+    const invoice = await invoice_assignment_staging.create({
+      po_num: po_number,
+      invoice_num: invoice_number,
+      invoice_date: invoice_date,
+      invoice_amount: invoice_amount,
+      gst_amount: gst_amount || 0,
+      total_amount: total_amount || invoice_amount,
+      invoice_status: "Pending",
+      requested_by: requested_by,
+      requested_at: new Date(),
+      invoice_url: fileUrl
+    });
+
+    // Send email notification
+    const approverDetails = await userlogins.findOne({
       where: { designation_name: "HO" },
-      attributes: ["emp_id", "emp_name", "email"],
-    }) || {
-      emp_id: "0000",
-      emp_name: "Default Approver",
-      email: "default-approver@company.com",
-    };
+      attributes: ["emp_id", "email"],
+    }) || { emp_id: "0000", email: "default-approver@company.com" };
 
-    const latestAssignmentId = await invoice_assignment_staging.max("assignment_id");
-    const newAssignmentId = latestAssignmentId ? latestAssignmentId + 1 : 1;
+    try {
+      await sendEmail({
+        to: approverDetails.email,
+        subject: `Invoice Approval Request - ${invoice_number}`,
+        html: `
+          <h2>New Invoice Approval Request</h2>
+          <p>A new invoice <strong>${invoice_number}</strong> has been submitted for approval.</p>
+          <p><strong>PO Number:</strong> ${po_number}</p>
+          <p><strong>Amount:</strong> ${invoice_amount}</p>
+          <p><a href="${fileUrl}">View Invoice PDF</a></p>
+          <p>Please review and take necessary action.</p>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Failed to send email:", emailError);
+    }
 
-    await invoice_assignment_staging.create(
-      {
-        assignment_id: newAssignmentId,
-        po_num: po_number,
-        invoice_num: invoice_number,
-        invoice_status: "Pending",
-        requested_by: requestor.emp_id,
-        requested_at: new Date(),
-      },
-      { transaction }
-    );
-
-    await transaction.commit();
-
-    await sendEmail({
-      to: approver.email,
-      subject: `🧾 New InvoiceApproval - PO ${po_number}`,
-      html: `
-        <h3>New InvoiceUploaded for Approval</h3>
-        <p><strong>PO Number:</strong> ${po_number}</p>
-        <p><strong>InvoiceNumber:</strong> ${invoice_number}</p>
-        <p><strong>Requested By:</strong> ${requestor.emp_name} (${requestor.emp_id})</p>
-        <p><a href="${s3Url}">View InvoicePDF</a></p>
-      `,
-      attachments: [
-        {
-          filename: `${po_number}_invoice.pdf`,
-          content: file.buffer,
-          contentType: file.mimetype,
-        },
-      ],
+    res.status(201).json({
+      success: true,
+      message: "Invoice uploaded successfully",
+      data: {
+        invoice_id: invoice.invoice_id,
+        file_url: fileUrl
+      }
     });
 
-    res.status(200).json({
-      message: "Invoice uploaded and approval request sent.",
-      requestor: requestor.emp_id,
-      approver: approver.emp_id,
-    });
-
-  } catch (err) {
-    console.error("❌ Upload Error:", err);
-    await transaction.rollback();
-    res.status(500).json({ error: "Failed to upload invoice and send approval request." });
+  } catch (error) {
+    console.error("Error uploading invoice:", error);
+    res.status(500).json({ error: "Failed to upload invoice" });
   }
 });
 

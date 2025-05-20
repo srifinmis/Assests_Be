@@ -10,7 +10,7 @@ const { po_processing_assignment_staging, po_processing_staging,po_products_stag
 
 
 const path = require('path');
-const fs = require("fs");
+const fs = require('fs-extra');  // Changed to fs-extra
 const { generatePOPDF } = require("../utils/pdfGenerator");
 const { uploadToS3 } = require('../utils/s3Service');  // Adjust path as needed
 const sendEmail = require("../utils/sendEmail"); 
@@ -68,14 +68,21 @@ router.post('/preview', async (req, res) => {
 
     // Generate PDF
     const pdfPath = await generatePOPDF(poData);
+    if (!await fs.pathExists(pdfPath)) {
+      return res.status(400).json({ error: "PDF not found." });
+    }
 
-    // Stream the PDF file to the response (inline)
-    const fileName = `PO-${poData.po_num}.pdf`;
+    // Stream the PDF file to the response
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+    res.setHeader('Content-Disposition', `inline; filename="PO-${poData.po_num}.pdf"`);
 
     const stream = fs.createReadStream(pdfPath);
     stream.pipe(res);
+
+    // Clean up the temporary file after streaming
+    stream.on('end', () => {
+      fs.remove(pdfPath).catch(err => console.error('Error cleaning up temp file:', err));
+    });
   } catch (error) {
     console.error('❌ Error in preview_po:', error);
     res.status(500).json({ message: 'Failed to generate PO preview', error: error.message });
@@ -196,36 +203,40 @@ router.post("/request_po", async (req, res) => {
       requested_at: new Date(),
     });
 
-    // ✅ 4. Generate PDF and upload to S3
+    // ✅ 4. Generate PDF and save locally
     let poUrl = null;
+    const uploadDir = path.join(__dirname, "../utils/uploads");
+
     try {
-      const pdfFilePath = await generatePOPDF(poData);
-      if (!fs.existsSync(pdfFilePath)) {
-        console.error("PDF not found. Please generate preview before submitting PO.");
+      // Ensure upload directory exists
+      await fs.ensureDir(uploadDir);
+
+      const tempPdfPath = await generatePOPDF(poData);
+      if (!await fs.pathExists(tempPdfPath)) {
         return res.status(400).json({ error: "PDF not found." });
       }
 
-      // Read the PDF file content into a buffer
-      const pdfBuffer = fs.readFileSync(pdfFilePath);
+      // Sanitize po_num for filename
+      const sanitizedPONum = po_num.replace(/[^a-zA-Z0-9-]/g, "-");
+      const fileName = `PO-${sanitizedPONum}.pdf`;
+      const localFilePath = path.join(uploadDir, fileName);
 
-      // Define the key for S3 (adjust the path as needed)
-      const s3Key = `IT_Asset_Management/PO/${po_num}.pdf`;
+      // Copy the generated PDF to uploads directory
+      await fs.copy(tempPdfPath, localFilePath);
 
-      // Upload PDF to S3 and get the URL
-      poUrl = await uploadToS3(pdfBuffer, s3Key);
-
-      // Optional cleanup
-      fs.unlinkSync(pdfFilePath);
-
-      // ✅ Update PO record with URL
+      // Update PO record with web-accessible URL path
+      poUrl = `/utils/uploads/${fileName}`;  // Store web-accessible path instead of absolute path
       await po_processing_staging.update(
         { po_url: poUrl },
-        { where: { po_num } }
+        { where: { po_num: po_num } }
       );
 
+      // Clean up the temporary file
+      await fs.remove(tempPdfPath);
+
     } catch (err) {
-      console.error("❌ Error generating or uploading PO PDF:", err);
-      return res.status(500).json({ error: "Failed to generate or upload PO PDF." });
+      console.error("❌ Error generating or saving PO PDF locally:", err);
+      return res.status(500).json({ error: "Failed to generate or save PO PDF locally." });
     }
 
     // ✅ 5. Send email
@@ -259,4 +270,36 @@ router.post("/request_po", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error", details: err.message });
   }
 });
+
+// Add new endpoint to get saved PO PDF
+router.get("/get_po_pdf/:poNum", async (req, res) => {
+  try {
+    const poNum = req.params.poNum;
+    if (!poNum) {
+      return res.status(400).json({ error: "PO number is required" });
+    }
+
+    // Sanitize poNum for filename
+    const sanitizedPONum = poNum.replace(/[^a-zA-Z0-9-]/g, "-");
+    const fileName = `PO-${sanitizedPONum}.pdf`;
+    const filePath = path.join(__dirname, '../utils/uploads', fileName);
+
+    // Check if file exists
+    if (!await fs.pathExists(filePath)) {
+      return res.status(404).json({ error: "PDF file not found" });
+    }
+
+    // Stream the file
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+    
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+  } catch (error) {
+    console.error("Error serving PO PDF:", error);
+    res.status(500).json({ error: "Failed to serve PO PDF" });
+  }
+});
+
 module.exports = router;
