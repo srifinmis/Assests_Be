@@ -5,7 +5,15 @@ const fs = require('fs-extra');
 const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
 const models = initModels(sequelize);
-const { po_processing_assignment_staging, po_processing_staging, userlogins } = models;
+const { 
+  po_processing_assignment_staging, 
+  po_processing_staging, 
+  po_processing,
+  po_processing_assignment,
+  po_products_staging,
+  po_products,
+  userlogins 
+} = models;
 
 // Get PO PDF
 router.get("/get_po_pdf/:poNum", async (req, res) => {
@@ -153,40 +161,102 @@ router.post("/action", async (req, res) => {
     const transaction = await sequelize.transaction();
 
     try {
-      // Update assignment status
-      await po_processing_assignment_staging.update(
-        {
-          po_status: action === 'approve' ? 'Approved' : 'Rejected',
-          approved_by,
-          approved_at: new Date(),
-          remarks: action === 'reject' ? remarksList[0]?.remarks : ''
-        },
-        {
-          where: { assignment_id: assignmentIds },
-          transaction
-        }
-      );
-
-      // Update PO status
+      // Get all assignments that are being processed
       const assignments = await po_processing_assignment_staging.findAll({
         where: { assignment_id: assignmentIds },
         transaction
       });
 
-      for (const assignment of assignments) {
-        await po_processing_staging.update(
+      if (action === 'approve') {
+        // Process each assignment
+        for (const assignment of assignments) {
+          // 1. Move from po_processing_staging to po_processing
+          const poDetails = await po_processing_staging.findOne({
+            where: { po_num: assignment.po_num },
+            transaction
+          });
+
+          if (poDetails) {
+            await po_processing.create({
+              ...poDetails.toJSON(),
+              created_at: new Date(),
+              created_by: approved_by
+            }, { transaction });
+
+            // 2. Move from po_processing_assignment_staging to po_processing_assignment
+            await po_processing_assignment.create({
+              ...assignment.toJSON(),
+              created_at: new Date(),
+              created_by: approved_by
+            }, { transaction });
+
+            // 3. Move from po_products_staging to po_products
+            const poProducts = await po_products_staging.findAll({
+              where: { po_num: assignment.po_num },
+              transaction
+            });
+
+            for (const product of poProducts) {
+              await po_products.create({
+                ...product.toJSON(),
+                created_at: new Date(),
+                created_by: approved_by
+              }, { transaction });
+            }
+
+            // Delete from staging tables after successful move
+            await po_processing_staging.destroy({
+              where: { po_num: assignment.po_num },
+              transaction
+            });
+
+            await po_processing_assignment_staging.destroy({
+              where: { assignment_id: assignment.assignment_id },
+              transaction
+            });
+
+            await po_products_staging.destroy({
+              where: { po_num: assignment.po_num },
+              transaction
+            });
+          }
+        }
+      } else {
+        // For rejection, just update the status
+        await po_processing_assignment_staging.update(
           {
-            status: action === 'approve' ? 'Approved' : 'Rejected'
+            po_status: 'Rejected',
+            approved_by,
+            approved_at: new Date(),
+            remarks: remarksList[0]?.remarks
           },
           {
-            where: { po_num: assignment.po_num },
+            where: { assignment_id: assignmentIds },
             transaction
           }
         );
+
+        // Update PO status in staging
+        for (const assignment of assignments) {
+          await po_processing_staging.update(
+            {
+              status: 'Rejected'
+            },
+            {
+              where: { po_num: assignment.po_num },
+              transaction
+            }
+          );
+        }
       }
 
       await transaction.commit();
-      res.json({ success: true, message: `POs ${action}ed successfully` });
+      res.json({ 
+        success: true, 
+        message: action === 'approve' 
+          ? 'POs approved and moved to main tables successfully' 
+          : 'POs rejected successfully' 
+      });
     } catch (error) {
       await transaction.rollback();
       throw error;
