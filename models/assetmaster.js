@@ -54,7 +54,6 @@ module.exports = function(sequelize, DataTypes) {
     sequelize,
     tableName: 'assetmaster',
     schema: 'public',
-    hasTrigger: true,
     timestamps: false,
     indexes: [
       {

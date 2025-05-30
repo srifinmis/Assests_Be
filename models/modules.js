@@ -7,11 +7,11 @@ module.exports = function(sequelize, DataTypes) {
       primaryKey: true
     },
     module_name: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false
     },
     description: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: true
     }
   }, {

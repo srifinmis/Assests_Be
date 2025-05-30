@@ -66,7 +66,6 @@ module.exports = function(sequelize, DataTypes) {
     sequelize,
     tableName: 'assetmaster_staging',
     schema: 'staging',
-    hasTrigger: true,
     timestamps: false,
     indexes: [
       {

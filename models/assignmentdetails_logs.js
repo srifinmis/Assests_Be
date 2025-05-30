@@ -1,6 +1,12 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('assignmentdetails_logs', {
+    id: {
+      autoIncrement: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true
+    },
     assignment_id: {
       type: DataTypes.INTEGER,
       allowNull: true
@@ -37,6 +43,15 @@ module.exports = function(sequelize, DataTypes) {
     sequelize,
     tableName: 'assignmentdetails_logs',
     schema: 'public',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      {
+        name: "assignmentdetails_logs_pkey",
+        unique: true,
+        fields: [
+          { name: "id" },
+        ]
+      },
+    ]
   });
 };

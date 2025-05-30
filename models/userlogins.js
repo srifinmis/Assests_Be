@@ -7,19 +7,19 @@ module.exports = function(sequelize, DataTypes) {
       primaryKey: true
     },
     emp_id: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false
     },
     emp_name: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false
     },
     email: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false
     },
     passwd_hash: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: true
     },
     created_at: {
@@ -33,11 +33,11 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: "2025-01-01 00:00:00+00"
     },
     sso_provider: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: true
     },
     sso_id: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: true
     },
     emp_status: {

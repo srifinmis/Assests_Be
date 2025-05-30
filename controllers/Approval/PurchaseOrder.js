@@ -5,14 +5,14 @@ const fs = require('fs-extra');
 const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
 const models = initModels(sequelize);
-const { 
-  po_processing_assignment_staging, 
-  po_processing_staging, 
+const {
+  po_processing_assignment_staging,
+  po_processing_staging,
   po_processing,
   po_processing_assignment,
   po_products_staging,
   po_products,
-  userlogins 
+  userlogins
 } = models;
 
 // Get PO PDF
@@ -36,7 +36,7 @@ router.get("/get_po_pdf/:poNum", async (req, res) => {
     // Stream the file
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
-    
+
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
 
@@ -50,7 +50,7 @@ router.get("/get_po_pdf/:poNum", async (req, res) => {
 router.get("/po", async (req, res) => {
   try {
     console.log("Fetching POs for approval...");
-    
+
     // Verify database connection
     try {
       await sequelize.authenticate();
@@ -118,7 +118,7 @@ router.get("/po", async (req, res) => {
       stack: error.stack,
       name: error.name
     });
-    
+
     // Check for specific database errors
     if (error.name === 'SequelizeConnectionError') {
       return res.status(500).json({ error: "Database connection error" });
@@ -129,8 +129,8 @@ router.get("/po", async (req, res) => {
     if (error.name === 'SequelizeDatabaseError') {
       return res.status(500).json({ error: "Database error occurred" });
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: "Failed to fetch POs",
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -187,7 +187,8 @@ router.post("/action", async (req, res) => {
             await po_processing_assignment.create({
               ...assignment.toJSON(),
               created_at: new Date(),
-              created_by: approved_by
+              created_by: approved_by,
+              po_status: "Approved"
             }, { transaction });
 
             // 3. Move from po_products_staging to po_products
@@ -203,22 +204,33 @@ router.post("/action", async (req, res) => {
                 created_by: approved_by
               }, { transaction });
             }
+            await po_processing_assignment_staging.update(
+              {
+                po_status: "Approved",
+                approved_at: new Date(),
+                approved_by: approved_by
+              },
+              {
+                where: { assignment_id: assignment.assignment_id },
+                transaction
+              }
+            );
 
             // Delete from staging tables after successful move
-            await po_processing_staging.destroy({
-              where: { po_num: assignment.po_num },
-              transaction
-            });
+            // await po_processing_staging.destroy({
+            //   where: { po_num: assignment.po_num },
+            //   transaction
+            // });
 
-            await po_processing_assignment_staging.destroy({
-              where: { assignment_id: assignment.assignment_id },
-              transaction
-            });
+            // await po_processing_assignment_staging.destroy({
+            //   where: { assignment_id: assignment.assignment_id },
+            //   transaction
+            // });
 
-            await po_products_staging.destroy({
-              where: { po_num: assignment.po_num },
-              transaction
-            });
+            // await po_products_staging.destroy({
+            //   where: { po_num: assignment.po_num },
+            //   transaction
+            // });
           }
         }
       } else {
@@ -251,11 +263,11 @@ router.post("/action", async (req, res) => {
       }
 
       await transaction.commit();
-      res.json({ 
-        success: true, 
-        message: action === 'approve' 
-          ? 'POs approved and moved to main tables successfully' 
-          : 'POs rejected successfully' 
+      res.json({
+        success: true,
+        message: action === 'approve'
+          ? 'POs approved and moved to main tables successfully'
+          : 'POs rejected successfully'
       });
     } catch (error) {
       await transaction.rollback();
