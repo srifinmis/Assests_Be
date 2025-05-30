@@ -6,8 +6,8 @@ const models = initModels(sequelize);
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs-extra'); // Using fs-extra for better file operations
-const { 
-  po_processing, 
+const {
+  po_processing,
   po_products_staging,
   po_processing_assignment_staging,
   po_processing_staging,
@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: function (req, file, cb) {
     if (file.mimetype !== 'application/pdf') {
@@ -46,7 +46,7 @@ router.get("/available", async (req, res) => {
       where: {
         po_status: ['Pending', 'Rejected']
       },
-      attributes: ['po_num', 'po_status','requested_at'], // include requested_at
+      attributes: ['po_num', 'po_status', 'requested_at'], // include requested_at
     });
 
     res.json(availablePOs);
@@ -80,7 +80,8 @@ router.get("/:poNum", async (req, res) => {
     const assignment = await po_processing_assignment_staging.findOne({
       where: { po_num: poNum }
     });
-
+  
+    // console.log("assignment",assignment);
     res.json({
       po_details: po,
       products: products,
@@ -95,11 +96,12 @@ router.get("/:poNum", async (req, res) => {
 // Update PO
 router.put("/:poNum", upload.single('po_pdf'), async (req, res) => {
   const transaction = await sequelize.transaction();
-  
+
   try {
     const { poNum } = req.params;
     const poData = JSON.parse(req.body.po_data);
-    
+    console.log("edit: ", poData)
+
     // Get existing PO details including po_url
     const existingPO = await po_processing_staging.findOne({
       where: { po_num: poNum }
@@ -109,6 +111,19 @@ router.put("/:poNum", upload.single('po_pdf'), async (req, res) => {
       await transaction.rollback();
       return res.status(404).json({ error: "PO not found" });
     }
+    const existingAssignment = await po_processing_assignment_staging.findOne({
+      where: { po_num: poNum }
+    });
+
+    if (!existingAssignment) {
+      await transaction.rollback();
+      return res.status(404).json({ error: "PO assignment status not found" });
+    }
+
+    // If the status is Rejected, we proceed with updating and resetting status to Pending
+    const shouldResetStatus = existingAssignment.po_status === "Rejected";
+
+
 
     // If new PDF is uploaded, handle file replacement
     let po_url = existingPO.po_url;
@@ -215,7 +230,7 @@ router.put("/:poNum", upload.single('po_pdf'), async (req, res) => {
     }
 
     // Update assignment status if needed
-    if (updated_by) {
+    if (updated_by && shouldResetStatus) {
       await po_processing_assignment_staging.update({
         po_status: "Pending",
         requested_by: updated_by,
@@ -236,4 +251,3 @@ router.put("/:poNum", upload.single('po_pdf'), async (req, res) => {
 });
 
 module.exports = router;
-
