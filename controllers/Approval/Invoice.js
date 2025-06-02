@@ -4,7 +4,8 @@ const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
 const models = initModels(sequelize);
 const { Op } = require("sequelize");
-
+const path = require('path');
+const fs = require('fs-extra');
 const sendEmail = require("../../utils/sendEmail");
 const calculateDepreciation = require("../../utils/Depreciation");
 
@@ -16,7 +17,7 @@ router.get("/invoice", async (req, res) => {
   try {
     const data = await invoice_assignment_staging.findAll({
       where: { invoice_status: "Pending" },
-      attributes: ["assignment_id", "po_num", "invoice_num","invoice_status", "requested_by"],
+      attributes: ["assignment_id", "po_num", "invoice_num", "invoice_status", "requested_by"],
       include: [
         {
           model: po_processing_staging,
@@ -28,12 +29,12 @@ router.get("/invoice", async (req, res) => {
 
     const poNums = data.map(p => p.po_num);
 
-     // Step 3: Fetch asset data separately
-     const assetData = await assetmaster_staging.findAll({
+    // Step 3: Fetch asset data separately
+    const assetData = await assetmaster_staging.findAll({
       where: {
         po_num: { [Op.in]: poNums }
       },
-      attributes: ["asset_id", "asset_type", "brand", "model", "imei_num","po_num", "po_date", "base_location", "state"]
+      attributes: ["asset_id", "asset_type", "brand", "model", "imei_num", "po_num", "po_date", "base_location", "state"]
     });
 
     // Step 4: Map assets to their PO numbers
@@ -47,7 +48,7 @@ router.get("/invoice", async (req, res) => {
         asset_type: asset.asset_type,
         brand: asset.brand,
         model: asset.model,
-        imei_num:asset.imei_num,
+        imei_num: asset.imei_num,
         po_num: asset.po_num,
         po_date: asset.po_date,
         base_location: asset.base_location,
@@ -58,7 +59,7 @@ router.get("/invoice", async (req, res) => {
     const formatted = data.map(item => ({
       assignment_id: item.assignment_id,
       po_num: item.po_num,
-      invoice_num:item.invoice_num,
+      invoice_num: item.invoice_num,
       invoice_status: item.invoice_status,
       requested_by: item.requested_by,
       invoice_url: item.po_num_po_processing_staging?.invoice_url || null,
@@ -70,6 +71,41 @@ router.get("/invoice", async (req, res) => {
   } catch (error) {
     console.error("Error fetching PO approvals:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/get_invoice_pdf/:invoice_url", async (req, res) => {
+  try {
+    let invoice_url = req.params.invoice_url;
+
+    if (!invoice_url) {
+      return res.status(400).json({ error: "Invoice Url is required" });
+    }
+
+    console.log("Invoice URL param:", invoice_url);
+
+    // Extract only the part after "/uploads/"
+    const uploadsIndex = invoice_url.indexOf("/uploads/");
+    if (uploadsIndex !== -1) {
+      invoice_url = invoice_url.substring(uploadsIndex + "/uploads/".length);
+    }
+
+    const fileName = invoice_url;
+    const filePath = path.join(__dirname, '../../utils/uploads', fileName);
+
+    if (!await fs.pathExists(filePath)) {
+      return res.status(404).json({ error: "PDF file not found" });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+  } catch (error) {
+    console.error("Error serving invoice PDF:", error);
+    res.status(500).json({ error: "Failed to serve invoice PDF" });
   }
 });
 
@@ -117,22 +153,22 @@ router.post("/action", async (req, res) => {
     if (normalizedAction === "reject") {
       // Step 1: Fetch the rejected po_nums from payment_assignment_staging
       const rejectedPoData = await invoice_assignment_staging.findAll({
-      where: {
-        assignment_id: { [Op.in]: assignmentIds },
-      },
-      attributes: ['po_num'],
-      raw: true,
-      transaction,
+        where: {
+          assignment_id: { [Op.in]: assignmentIds },
+        },
+        attributes: ['po_num'],
+        raw: true,
+        transaction,
       });
-    
+
       const rejectedPoNums = rejectedPoData.map(p => p.po_num);
-    
+
       // Step 2: Delete from assetmaster_staging where po_num is in rejectedPoNums
       await assetmaster_staging.destroy({
-      where: {
-        po_num: { [Op.in]: rejectedPoNums },
-      },
-      transaction,
+        where: {
+          po_num: { [Op.in]: rejectedPoNums },
+        },
+        transaction,
       });
     }
 

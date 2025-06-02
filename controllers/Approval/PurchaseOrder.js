@@ -25,6 +25,7 @@ router.get("/get_po_pdf/:poNum", async (req, res) => {
 
     // Sanitize poNum for filename
     const sanitizedPONum = poNum.replace(/[^a-zA-Z0-9-]/g, "-");
+    console.log("po-senitized: ", sanitizedPONum)
     const fileName = `PO-${sanitizedPONum}.pdf`;
     const filePath = path.join(__dirname, '../../utils/uploads', fileName);
 
