@@ -6,21 +6,9 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    employee_id: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    employee_name: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
     email: {
       type: DataTypes.STRING(255),
       allowNull: false
-    },
-    employee_status: {
-      type: DataTypes.STRING(50),
-      allowNull: true
     },
     designation_name: {
       type: DataTypes.STRING(50),
@@ -52,6 +40,46 @@ module.exports = function(sequelize, DataTypes) {
     },
     access_status: {
       type: DataTypes.STRING(30),
+      allowNull: true
+    },
+    emp_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    emp_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    passwd_hash: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    sso_provider: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    sso_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    emp_status: {
+      type: DataTypes.STRING(30),
+      allowNull: true
+    },
+    role_ids_assigned: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    states_assigned: {
+      type: DataTypes.TEXT,
       allowNull: true
     }
   }, {

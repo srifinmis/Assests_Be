@@ -12,6 +12,7 @@ var _assignmentdetails_logs_staging = require("./assignmentdetails_logs_staging"
 var _assignmentdetails_staging = require("./assignmentdetails_staging");
 var _bulk_assignmentdetails_staging = require("./bulk_assignmentdetails_staging");
 var _bulk_upload_staging = require("./bulk_upload_staging");
+var _debit_card_details = require("./debit_card_details");
 var _employee_hierarchy = require("./employee_hierarchy");
 var _employee_master = require("./employee_master");
 var _invoice_assignment_staging = require("./invoice_assignment_staging");
@@ -42,6 +43,7 @@ function initModels(sequelize) {
   var assignmentdetails_staging = _assignmentdetails_staging(sequelize, DataTypes);
   var bulk_assignmentdetails_staging = _bulk_assignmentdetails_staging(sequelize, DataTypes);
   var bulk_upload_staging = _bulk_upload_staging(sequelize, DataTypes);
+  var debit_card_details = _debit_card_details(sequelize, DataTypes);
   var employee_hierarchy = _employee_hierarchy(sequelize, DataTypes);
   var employee_master = _employee_master(sequelize, DataTypes);
   var invoice_assignment_staging = _invoice_assignment_staging(sequelize, DataTypes);
@@ -117,6 +119,7 @@ function initModels(sequelize) {
     assignmentdetails_staging,
     bulk_assignmentdetails_staging,
     bulk_upload_staging,
+    debit_card_details,
     employee_hierarchy,
     employee_master,
     invoice_assignment_staging,

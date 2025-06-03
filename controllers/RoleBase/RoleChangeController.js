@@ -79,11 +79,14 @@ router.post('/update', async (req, res) => {
     const data = req.body;
 
     const roleMapping = {
-        "IT-Admin":1,
-        "IT-RO_Staff":2,
-        "IT-HO_Staff":3,
-        "IT-Approver":4,
-        "IT-Accounts":5,
+        "IT-Admin": 1,
+        "IT-RO_Staff": 2,
+        "IT-HO_Staff": 3,
+        "IT-Approver": 4,
+        "IT-Accounts": 5,
+        "IT-HO_USER": 6,
+        "IT-RO_USER": 7,
+        "IT-BO_USER": 8
     };
 
     try {
@@ -104,9 +107,10 @@ router.post('/update', async (req, res) => {
         const roleIdsString = roleIds.join(',');
 
         await userlogins.update(
-            { role_ids_assigned: roleIdsString,
-            states_assigned: data.states_assigned || null  // Store as string or null
-        },
+            {
+                role_ids_assigned: roleIdsString,
+                states_assigned: data.states_assigned || null  // Store as string or null
+            },
             { where: { emp_id: data.emp_id } }
         );
 
