@@ -4,6 +4,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require('path');
 const { sequelize } = require("./config/db");
+const uploadRoute = require('./routes/upload');
 const authRoutes = require("./routes/authRoutes");
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(bodyParser.json());
 app.use('/utils/uploads', express.static(path.join(__dirname, 'utils/uploads')));
 
 app.use("/api", authRoutes);
+app.use('/api/bulk', uploadRoute);
 
 const PORT = process.env.PORT || 2727; 
 

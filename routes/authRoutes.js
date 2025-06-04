@@ -1,5 +1,6 @@
 //routes/authRoutes.js
 const express = require("express");
+// const upload = require("../middleware/upload");
 // const multer = require("multer"); // ✅ Import multer
 
 const { login } = require("../controllers/authController");
@@ -68,7 +69,12 @@ router.use("/depreciation", DepreciationRoutes);
 router.use("/bulk", BulkRoutes);
 router.use("/role", RoleRoutes);
 
+// Debit Card apis
+
+
 module.exports = router;
+
+
 // //routes/authRoutes.js
 // const express = require("express");
 // // const multer = require("multer"); // ✅ Import multer

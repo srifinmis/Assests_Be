@@ -74,6 +74,18 @@ module.exports = function(sequelize, DataTypes) {
     remarks: {
       type: DataTypes.STRING(100),
       allowNull: true
+    },
+    ro_name: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    bo_name: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    pod: {
+      type: DataTypes.STRING(80),
+      allowNull: true
     }
   }, {
     sequelize,
