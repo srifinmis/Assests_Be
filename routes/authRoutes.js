@@ -38,6 +38,7 @@ const RoleRoutes = require("../controllers/RoleBase/RoleChangeController")
 const PurchaseOrderApprovalRoutes = require("../controllers/Approval/PurchaseOrder");
 
 const RORoutes = require("../controllers/Debit/RO")
+const CreateRouter = require("../controllers/Debit/CreateCustomer")
 
 const router = express.Router();
 // const upload = multer({ storage: multer.memoryStorage() });
@@ -73,6 +74,7 @@ router.use("/role", RoleRoutes);
 
 // Debit Card apis
 router.use("/ros", RORoutes);
+router.use("/bo",CreateRouter)
 
 
 module.exports = router;

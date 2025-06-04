@@ -93,6 +93,38 @@ router.post("/accept", async (req, res) => {
     }
 });
 
+router.post("/assign", async (req, res) => {
+    const { docketIds, ro_assigned_to, bo_name } = req.body;
+
+    if (!Array.isArray(docketIds) || docketIds.length === 0 || !ro_assigned_to || !bo_name) {
+        return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    try {
+        const result = await debit_card_details.update(
+            {
+                ro_assigned_to,
+                ro_assigned_date: new Date(),
+                bo_name,
+                bo_status: "Pending",
+                ro_status: "Assigned"
+            },
+            {
+                where: {
+                    docket_id: docketIds
+                }
+            }
+        );
+
+        return res.status(200).json({
+            message: "ROs successfully assigned to BOs",
+            updatedCount: result[0]
+        });
+    } catch (error) {
+        console.error("Error assigning to BOs:", error);
+        return res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+});
 
 router.get("/detailsassign", async (req, res) => {
     const empId = req.headers["emp_id"];

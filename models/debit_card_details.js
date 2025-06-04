@@ -23,10 +23,6 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATEONLY,
       allowNull: true
     },
-    ro_accepted_by: {
-      type: DataTypes.STRING(30),
-      allowNull: true
-    },
     ro_accepted_date: {
       type: DataTypes.DATEONLY,
       allowNull: true
@@ -40,10 +36,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     ro_status: {
-      type: DataTypes.STRING(30),
-      allowNull: true
-    },
-    bo_accepted_by: {
       type: DataTypes.STRING(30),
       allowNull: true
     },
@@ -89,6 +81,22 @@ module.exports = function(sequelize, DataTypes) {
     },
     send_to: {
       type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    loan_app_no: {
+      type: DataTypes.STRING(30),
+      allowNull: true
+    },
+    customer_id: {
+      type: DataTypes.STRING(30),
+      allowNull: true
+    },
+    issue_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+    cust_assigned_from: {
+      type: DataTypes.STRING(50),
       allowNull: true
     }
   }, {
