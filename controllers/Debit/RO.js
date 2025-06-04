@@ -26,7 +26,7 @@ router.get("/details", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]]
         });
-        console.log("response data: ",ros)
+        console.log("response data: ", ros)
 
         res.json(ros);
     } catch (error) {
@@ -46,7 +46,65 @@ router.get("/detailslog", async (req, res) => {
 
     try {
         const ros = await debit_card_details.findAll({
-            where: { ho_assigned_to: empId }, // 🟢 Filter by ho_by = emp_id
+            where: { ho_assigned_to: empId, ro_status: "Pending" }, // 🟢 Filter by ho_by = emp_id
+            attributes: [
+                ["docket_id", "instakit_no"],
+                ["ho_assigned_to", "unit_id"],
+                ["ro_name", "unit_name"],
+                ["ro_status", "assigned_status"],
+                ["pod", "po_number"]
+            ],
+            order: [["docket_id", "ASC"]]
+        });
+        console.log("response data: ", ros)
+
+        res.json(ros);
+    } catch (error) {
+        console.error("Error fetching RO details:", error);
+        res.status(500).json({ error: "Failed to fetch RO details" });
+    }
+});
+
+
+router.post("/accept", async (req, res) => {
+    const { docketIds } = req.body;
+
+    if (!Array.isArray(docketIds) || docketIds.length === 0) {
+        return res.status(400).json({ error: "docketIds must be a non-empty array" });
+    }
+
+    try {
+        const result = await debit_card_details.update(
+            { ro_status: "Accepted" },
+            {
+                where: {
+                    docket_id: docketIds
+                }
+            }
+        );
+
+        res.status(200).json({
+            message: "RO status updated to Accepted successfully",
+            updatedCount: result[0]
+        });
+    } catch (error) {
+        console.error("Error updating ro_status:", error);
+        res.status(500).json({ error: "Failed to update ro_status" });
+    }
+});
+
+
+router.get("/detailsassign", async (req, res) => {
+    const empId = req.headers["emp_id"];
+    console.log("id: ", empId)
+
+    if (!empId) {
+        return res.status(400).json({ error: "emp_id is required in request headers" });
+    }
+
+    try {
+        const ros = await debit_card_details.findAll({
+            where: { ho_assigned_to: empId, ro_status: "Accepted" },
             attributes: [
                 ["docket_id", "instakit_no"],
                 ["ho_assigned_to", "unit_id"],
@@ -56,7 +114,7 @@ router.get("/detailslog", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]]
         });
-        console.log("response data: ",ros)
+        console.log("response data: ", ros)
 
         res.json(ros);
     } catch (error) {
@@ -64,6 +122,7 @@ router.get("/detailslog", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch RO details" });
     }
 });
+
 
 module.exports = router;
 
