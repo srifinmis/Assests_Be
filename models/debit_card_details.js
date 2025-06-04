@@ -86,6 +86,10 @@ module.exports = function(sequelize, DataTypes) {
     pod: {
       type: DataTypes.STRING(80),
       allowNull: true
+    },
+    send_to: {
+      type: DataTypes.STRING(20),
+      allowNull: true
     }
   }, {
     sequelize,

@@ -45,6 +45,7 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
             remarks: record["Remarks"] || null,
             ho_assigned_date: new Date(),
             ho_by: requested_by,
+            send_to: 'RO'
         }));
 
         const docketIds = rows.map(r => r.docket_id);
