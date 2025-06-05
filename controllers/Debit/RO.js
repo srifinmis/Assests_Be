@@ -2,9 +2,41 @@ const express = require("express");
 const router = express.Router();
 const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
+const { where } = require("sequelize");
 
 const models = initModels(sequelize);
-const { debit_card_details } = models;
+const { debit_card_details, userlogins } = models;
+
+router.get("/ho-report", async (req, res) => {
+    const empId = req.headers["emp_id"];
+    console.log("id: ", empId);
+
+    if (!empId) {
+        return res.status(400).json({ error: "emp_id is required in request headers" });
+    }
+
+    try {
+        const results = await debit_card_details.findAll({
+            where: { ho_by: empId },
+            // include: [
+            //     {
+            //         model: userlogins,
+            //         as: "ho_by",
+            //         where: { emp_id: empId },
+            //         attributes: ["emp_id", "emp_name"], // Optional
+            //         required: true
+            //     }
+            // ],
+            // attributes: ["instakit_no", "unit_id", "unit_name", "assigned_status", "po_number"]
+        });
+
+        res.json(results);
+    } catch (error) {
+        console.error("Error fetching Report details:", error);
+        res.status(500).json({ error: "Failed to fetch Report details" });
+    }
+});
+
 
 router.get("/details", async (req, res) => {
     const empId = req.headers["emp_id"];

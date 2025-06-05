@@ -21,76 +21,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // POST /bulk/upload-ho
-// router.post('/upload-ho', upload.single('file'), async (req, res) => {
-//     const { requested_by } = req.body;
-
-//     try {
-//         const filePath = req.file.path;
-//         const workbook = XLSX.readFile(filePath);
-//         const firstSheet = workbook.SheetNames[0];
-//         const records = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
-
-//         if (!records.length) {
-//             fs.unlinkSync(filePath);
-//             return res.status(400).json({ message: '❌ Empty Excel file.' });
-//         }
-
-//         // Prepare rows
-//         const rows = records.map((record) => ({
-//             docket_id: String(record["Instakit"]),
-//             ho_assigned_to: record["Unit ID"],
-//             ro_name: record["Unit Name"],
-//             status: record["Assignment Status"],
-//             pod: record["Pod"],
-//             remarks: record["Remarks"] || null,
-//             ho_assigned_date: new Date(),
-//             ho_by: requested_by,
-//             send_to: 'RO',
-//             ro_status: 'Pending'
-//         }));
-
-//         const docketIds = rows.map(r => r.docket_id);
-
-//         // Fetch existing records from DB
-//         const existingRecords = await debit_card_details.findAll({
-//             where: {
-//                 docket_id: docketIds,
-//             },
-//         });
-
-//         const existingDocketIds = existingRecords.map(r => r.docket_id);
-//         const missingDocketIds = docketIds.filter(id => !existingDocketIds.includes(id));
-
-//         if (missingDocketIds.length > 0 && existingDocketIds.length > 0) {
-//             // ❌ Some exist, some don't – abort
-//             fs.unlinkSync(filePath);
-//             return res.status(400).json({
-//                 message: `❌ Upload aborted. Some docket_id(s) are missing in the DB.-- [ ${missingDocketIds} ]`,
-//                 missing: missingDocketIds,
-//             });
-//         } else if (missingDocketIds.length === docketIds.length) {
-//             // 🆕 All are new – insert
-//             await debit_card_details.bulkCreate(rows);
-//             fs.unlinkSync(filePath);
-//             return res.status(200).json({ message: "✅ All new records inserted." });
-//         } else {
-//             // ✅ All exist – update
-//             for (const record of rows) {
-//                 await debit_card_details.update(record, {
-//                     where: { docket_id: record.docket_id }
-//                 });
-//             }
-//             fs.unlinkSync(filePath);
-//             return res.status(200).json({ message: "✅ All existing records updated." });
-//         }
-
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: "❌ Failed to process file.", error: error.message });
-//     }
-// });
 router.post('/upload-ho', upload.single('file'), async (req, res) => {
-    const { requested_by } = req.body;
+    const { requested_by, flag } = req.body;
+    console.log('hobulk upload: ', req.body)
 
     try {
         const filePath = req.file.path;
@@ -103,7 +36,7 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
             return res.status(400).json({ message: '❌ Empty Excel file.' });
         }
 
-        // Step 1: Move current debit_card_details to workflow (update or insert only, no delete)
+        // Step 1: Backup to workflow table
         const existingDetails = await debit_card_details.findAll();
         for (const row of existingDetails) {
             const existingWorkflow = await debit_card_details_workflow.findOne({
@@ -119,23 +52,34 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
             }
         }
 
-        // Step 2: Prepare new rows from Excel
+        // Step 2: Create new rows based on flag
+        const isRO = flag === 'RO';
+        const isBO = flag === 'BO';
+
+        if (!isRO && !isBO) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ message: '❌ Invalid flag. Must be "RO" or "BO".' });
+        }
+
         const newRows = records.map(record => ({
             docket_id: String(record["Instakit"]).trim(),
             ho_assigned_to: record["Unit ID"],
-            ro_name: record["Unit Name"],
+            ro_assigned_to: isBO ? record["Unit ID"] : null,
             status: record["Assignment Status"],
             pod: record["Pod"],
             remarks: record["Remarks"] || null,
             ho_assigned_date: new Date(),
             ho_by: requested_by,
-            send_to: 'RO',
-            ro_status: 'Pending'
+            send_to: isRO ? 'RO' : 'BO',
+            ro_name: isRO ? record["Unit Name"] : null,
+            ro_status: isRO ? 'Pending' : null,
+            bo_name: isBO ? record["Unit Name"] : null,
+            bo_status: isBO ? 'Pending' : null
         }));
 
         const docketIds = newRows.map(r => r.docket_id);
 
-        // Step 3: Check which records exist in debit_card_details
+        // Step 3: Check if dockets exist
         const existingRecords = await debit_card_details.findAll({
             where: { docket_id: docketIds }
         });
@@ -144,24 +88,31 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
         const missingDocketIds = docketIds.filter(id => !existingDocketIds.includes(id));
 
         if (missingDocketIds.length > 0 && existingDocketIds.length > 0) {
-            // ❌ Mixed case – abort
             fs.unlinkSync(filePath);
             return res.status(400).json({
-                message: `❌ Upload aborted. Some docket_id(s) are missing in the DB.-- [ ${missingDocketIds} ]`,
+                message: `❌ Upload aborted. Some Instakit(s) are missing in the File Please Check Again.-- [ ${missingDocketIds} ]`,
                 missing: missingDocketIds,
             });
         } else if (missingDocketIds.length === docketIds.length) {
-            // 🆕 All are new – insert
+            // All new - insert
             await debit_card_details.bulkCreate(newRows);
             fs.unlinkSync(filePath);
             return res.status(200).json({ message: "✅ All new records inserted." });
         } else {
-            // ✅ All exist – update
+            // All exist - update with blanks for other columns
+            const allColumns = Object.keys(debit_card_details.rawAttributes);
+
             for (const record of newRows) {
-                await debit_card_details.update(record, {
+                const fullRecord = {};
+                for (const column of allColumns) {
+                    if (column === 'debit_id' || column === 'createdAt' || column === 'updatedAt') continue;
+                    fullRecord[column] = record.hasOwnProperty(column) ? record[column] : null;
+                }
+                await debit_card_details.update(fullRecord, {
                     where: { docket_id: record.docket_id }
                 });
             }
+
             fs.unlinkSync(filePath);
             return res.status(200).json({ message: "✅ All existing records updated." });
         }
@@ -309,9 +260,9 @@ router.post('/upload-bo', upload.single('file'), async (req, res) => {
     }
 });
 
-//RO will assign to bo bulkly
-// POST /bulk/upload-assignbo
-router.post('/upload-assignbo', upload.single('file'), async (req, res) => {
+//RO will assign to bo bulkly RO assigns to BO
+// POST /bulk/upload-roassignbo
+router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
     const { requested_by } = req.body;
 
     try {
