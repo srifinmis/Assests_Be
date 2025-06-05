@@ -126,6 +126,41 @@ router.post("/assign", async (req, res) => {
     }
 });
 
+router.post("/unassign", async (req, res) => {
+    const { docketIds } = req.body;
+
+    if (!Array.isArray(docketIds) || docketIds.length === 0) {
+        return res.status(400).json({ error: "docketIds must be a non-empty array" });
+    }
+
+    try {
+        const allFields = Object.keys(debit_card_details.rawAttributes);
+        const excludeFields = ["debit_id", "docket_id", "ho_by"];
+        const fieldsToUpdate = {};
+        allFields.forEach((field) => {
+            if (!excludeFields.includes(field)) {
+                fieldsToUpdate[field] = null;
+            }
+        });
+        fieldsToUpdate["status"] = "N";
+
+        const result = await debit_card_details.update(fieldsToUpdate, {
+            where: {
+                docket_id: docketIds
+            }
+        });
+
+        res.status(200).json({
+            message: "Selected rows unassigned successfully.",
+            updatedCount: result[0],
+        });
+    } catch (error) {
+        console.error("Error during unassign:", error);
+        res.status(500).json({ error: "Failed to unassign selected rows." });
+    }
+});
+
+
 router.get("/detailsassign", async (req, res) => {
     const empId = req.headers["emp_id"];
     console.log("id: ", empId)
