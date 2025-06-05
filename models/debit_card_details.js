@@ -43,20 +43,12 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATEONLY,
       allowNull: true
     },
-    bo_assigned_to_customer: {
-      type: DataTypes.STRING(30),
-      allowNull: true
-    },
     bo_assigned_date: {
       type: DataTypes.DATEONLY,
       allowNull: true
     },
     bo_status: {
       type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    role_id: {
-      type: DataTypes.INTEGER,
       allowNull: true
     },
     status: {

@@ -38,6 +38,7 @@ const RoleRoutes = require("../controllers/RoleBase/RoleChangeController")
 const PurchaseOrderApprovalRoutes = require("../controllers/Approval/PurchaseOrder");
 
 const RORoutes = require("../controllers/Debit/RO")
+const BORoutes = require("../controllers/Debit/BO");
 const CreateRouter = require("../controllers/Debit/CreateCustomer")
 
 const router = express.Router();
@@ -74,6 +75,7 @@ router.use("/role", RoleRoutes);
 
 // Debit Card apis
 router.use("/ros", RORoutes);
+router.use("/bos", BORoutes);
 router.use("/bo",CreateRouter)
 
 
