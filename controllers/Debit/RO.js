@@ -18,16 +18,7 @@ router.get("/ho-report", async (req, res) => {
     try {
         const results = await debit_card_details.findAll({
             where: { ho_by: empId },
-            // include: [
-            //     {
-            //         model: userlogins,
-            //         as: "ho_by",
-            //         where: { emp_id: empId },
-            //         attributes: ["emp_id", "emp_name"], // Optional
-            //         required: true
-            //     }
-            // ],
-            // attributes: ["instakit_no", "unit_id", "unit_name", "assigned_status", "po_number"]
+            attributes: ["docket_id", "ho_assigned_to", "ho_assigned_date", "ro_name", "bo_name", "status", "pod"]
         });
 
         res.json(results);
@@ -52,6 +43,7 @@ router.get("/ro-report", async (req, res) => {
                 "docket_id",
                 "ro_assigned_to",
                 "bo_name",
+                "ho_assigned_date",
                 "ro_assigned_date",
                 "ro_status",
                 "remarks",
@@ -60,7 +52,7 @@ router.get("/ro-report", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]],
         });
-        console.log('report: ',results)
+        console.log('report: ', results)
 
         const formattedResults = results.map((row) => {
             const status = row.dataValues.ro_status;
@@ -78,6 +70,7 @@ router.get("/ro-report", async (req, res) => {
                 docket_id: row.docket_id,
                 ro_assigned_to: row.ro_assigned_to,
                 bo_name: row.bo_name,
+                ho_assigned_date: row.ho_assigned_date,
                 ro_assigned_date: row.ro_assigned_date,
                 ro_status: row.ro_status,
                 remarks: row.remarks,

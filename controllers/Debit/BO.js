@@ -7,6 +7,30 @@ const initModels = require("../../models/init-models");
 const models = initModels(sequelize);
 const { debit_card_details, userlogins } = models;
 
+router.get("/instakitIds", async (req, res) => {
+
+    try {
+        const requestedBy = req.headers.requestedby;
+
+        if (!requestedBy) {
+            return res.status(400).json({ error: "Missing 'requestedBy' in headers" });
+        }
+
+        const results = await debit_card_details.findAll({
+            where: { ro_assigned_to: requestedBy },
+            attributes: ["docket_id"]
+        });
+
+        const docketIds = results.map(row => row.docket_id);
+
+        res.json(docketIds);
+
+    } catch (error) {
+        console.error("Error fetching BO details:", error);
+        res.status(500).json({ error: "Failed to fetch BO details" });
+    }
+});
+
 router.get("/boiddropdown", async (req, res) => {
 
     try {
@@ -40,7 +64,9 @@ router.get("/bo-report", async (req, res) => {
             attributes: [
                 "docket_id",
                 "customer_id",
+                "cust_assigned_from",
                 "bo_assigned_date",
+                "ro_assigned_date",
                 "bo_status",
                 "pod",
                 // "bo_name",
@@ -63,8 +89,8 @@ router.get("/bo-report", async (req, res) => {
 
             return {
                 docket_id: row.docket_id,
-                customer_id: row.customer_id,
-                bo_assigned_date: row.bo_assigned_date,
+                customer_id: row.customer_id || row.cust_assigned_from,
+                bo_assigned_date: row.ro_assigned_date,
                 bo_status: row.bo_status,
                 pod: row.pod,
                 // bo_name: row.bo_name,
@@ -170,7 +196,55 @@ router.post("/accept", async (req, res) => {
     }
 });
 
+router.get("/detailsassign", async (req, res) => {
+    const empId = req.headers["emp_id"];
+    console.log("id: ", empId)
+
+    if (!empId) {
+        return res.status(400).json({ error: "emp_id is required in request headers" });
+    }
+
+    try {
+        const ros = await debit_card_details.findAll({
+            where: { ro_assigned_to: empId, bo_status: "Accepted" },
+            attributes: [
+                ["docket_id", "instakit_no"],
+                ["ho_assigned_to", "unit_id"],
+                ["ro_name", "unit_name"],
+                ["status", "assigned_status"],
+                ["pod", "po_number"],
+                ["ro_status", "ro_status"]
+            ],
+            order: [["docket_id", "ASC"]]
+        });
+        console.log("response data: ", ros)
+
+        res.json(ros);
+    } catch (error) {
+        console.error("Error fetching RO details:", error);
+        res.status(500).json({ error: "Failed to fetch RO details" });
+    }
+});
 
 
+router.get("/instakits", async (req, res) => {
+    try {
+        const instakits = await debit_card_details.findAll({
+            where: {
+                bo_status: {
+                    [Op.or]: [null, "", "Assigned"] // choose what makes sense
+                }
+            },
+            attributes: ["docket_id"],
+            order: [["docket_id", "ASC"]],
+        });
+
+        const docketIds = instakits.map(row => row.docket_id);
+        res.json(docketIds);
+    } catch (error) {
+        console.error("Error fetching instakit list:", error);
+        res.status(500).json({ error: "Failed to fetch docket IDs" });
+    }
+});
 
 module.exports = router;
