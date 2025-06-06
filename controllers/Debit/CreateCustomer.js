@@ -37,7 +37,7 @@ router.post("/createcustomer", async (req, res) => {
             },
             { where: { docket_id: instakitNo } }
         );
-        return res.status(200).json({ message: "✅ Customer Created successfully." });
+        return res.status(200).json({ message: "✅ Assigned to Customer successfully." });
 
     } catch (err) {
         console.error("Internal error:", err);

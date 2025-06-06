@@ -52,7 +52,7 @@ router.get("/boiddropdown", async (req, res) => {
 
 router.get("/bo-report", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id: ", empId);
+    // console.log("id: ", empId);
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -64,11 +64,15 @@ router.get("/bo-report", async (req, res) => {
             attributes: [
                 "docket_id",
                 "customer_id",
+                // "ho_assigned_to",
+                "ro_assigned_to",
                 "cust_assigned_from",
                 "bo_assigned_date",
+                "bo_accepted_date",
                 "ro_assigned_date",
                 "bo_status",
-                "pod",
+                "issue_date",
+                "bo_name",
                 // "bo_name",
                 // "bo_status"
             ],
@@ -89,13 +93,15 @@ router.get("/bo-report", async (req, res) => {
 
             return {
                 docket_id: row.docket_id,
-                customer_id: row.customer_id || row.cust_assigned_from,
-                bo_assigned_date: row.ro_assigned_date,
+                customer_id: row.customer_id,
+                ro_assigned_date: row.ro_assigned_date,
                 bo_status: row.bo_status,
-                pod: row.pod,
-                // bo_name: row.bo_name,
-                // bo_status: row.bo_status,
-                // action_status
+                // ho_assigned_to: row.ho_assigned_to,
+                ro_assigned_to: row.ro_assigned_to,
+                bo_accepted_date: row.bo_accepted_date,
+                bo_assigned_date: row.bo_assigned_date,
+                bo_name: row.bo_name,
+                issue_date: row.issue_date
             };
         });
 
