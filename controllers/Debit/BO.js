@@ -40,8 +40,9 @@ router.get("/boiddropdown", async (req, res) => {
                     [Op.like]: 'B%' // starts with 'B'
                 }
             },
-            attributes: ['emp_id', 'emp_name'],
+            attributes: ['branchid_name', 'emp_name'],
         });
+        console.log('bo data dropdown: ', boUsers)
 
         res.json(boUsers);
     } catch (error) {
@@ -144,7 +145,7 @@ router.get("/details", async (req, res) => {
 
 router.get("/detailslog", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id: ", empId)
+    console.log("id detailslog: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });

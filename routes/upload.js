@@ -66,13 +66,25 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
         }
 
         const unitIds = records.map(r => r["Unit ID"]);
+
+        const whereCondition = isBO
+            ? { branchid_name: unitIds }
+            : { emp_id: unitIds };
+
+        console.log('where : ', whereCondition);
+
         const existingUsers = await userlogins.findAll({
-            where: {
-                emp_id: unitIds
-            }
+            where: whereCondition
         });
-        const existingEmpIds = existingUsers.map(u => u.emp_id);
-        const missingEmpIds = unitIds.filter(id => !existingEmpIds.includes(id));
+
+        console.log('existingUsers : ', existingUsers);
+
+        // Dynamically map based on the flag
+        const existingUnitIds = isBO
+            ? existingUsers.map(u => u.branchid_name)
+            : existingUsers.map(u => u.emp_id);
+
+        const missingEmpIds = unitIds.filter(id => !existingUnitIds.includes(id));
 
         if (missingEmpIds.length > 0) {
             fs.unlinkSync(filePath);

@@ -17,7 +17,7 @@ exports.login = async (req, res) => {
     const user = await userlogins.findOne({ where: { emp_id } });
     if (!user) return res.status(400).json({ message: "User not found" });
 
-    if (user.emp_status !== "ACCEPTED" || user.access_status !== "GRANTED") 
+    if (user.emp_status !== "ACCEPTED" || user.access_status !== "GRANTED")
       return res.status(400).json({ message: "ACCESS DENIED!" });
 
     const validPassword = await bcrypt.compare(password, user.passwd_hash);
@@ -36,6 +36,17 @@ exports.login = async (req, res) => {
     }
     const roleNames = rolesData.map(role => role.role_name);
 
+    const designationcheck = user.designation_name;
+    console.log('designation : ', designationcheck);
+
+    const validDesignations = ['Branch Manager', 'CSM'];
+
+    const assignedTo = validDesignations.includes(designationcheck)
+      ? user.branchid_name
+      : user.emp_id;
+    console.log('assigned to : ', assignedTo)
+
+
     // Fetch all modules for the role
     const roleModules = await roles_modules.findAll({
       where: { role_id: roleIds },
@@ -52,7 +63,7 @@ exports.login = async (req, res) => {
     )];
 
     // Fetch the states_assigned from userlogins table
-    const statesAssigned = user.states_assigned || []; // Default to empty array if no states are assigned
+    const statesAssigned = user.states_assigned || [];
 
     // Generate the JWT token
     const token = jwt.sign(
@@ -60,7 +71,8 @@ exports.login = async (req, res) => {
         id: user.system_id,
         Role: roleNames,
         modules: modulesList,
-        statesAssigned: statesAssigned,  // Add states_assigned to the JWT payload
+        branch: user.branchid_name,
+        statesAssigned: statesAssigned,
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
@@ -70,13 +82,17 @@ exports.login = async (req, res) => {
       message: "Login successful",
       token,
       user: {
-        emp_id: user.emp_id,
+        emp_id: assignedTo,
+        emp_id2: assignedTo,
         name: user.emp_name,
-        role: user.designation_name
+        role: user.designation_name,
+        branch: user.branchid_name
       },
       allowedModules: modulesList,
+      branch: user.branchid_name,
       statesAssigned: statesAssigned  // Include states_assigned in the response
     });
+    console.log('login res: ', res.user);
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
