@@ -42,6 +42,7 @@ router.get("/ro-report", async (req, res) => {
             attributes: [
                 "docket_id",
                 "ro_assigned_to",
+                "ho_by",
                 "bo_name",
                 "ho_assigned_date",
                 "ro_accepted_date",
@@ -70,15 +71,13 @@ router.get("/ro-report", async (req, res) => {
             return {
                 docket_id: row.docket_id,
                 ro_assigned_to: row.ro_assigned_to,
+                ho_by: row.ho_by,
                 bo_name: row.bo_name,
                 ho_assigned_date: row.ho_assigned_date,
                 ro_accepted_date: row.ro_accepted_date,
                 ro_assigned_date: row.ro_assigned_date,
                 ro_status: row.ro_status,
                 remarks: row.remarks,
-                // bo_name: row.bo_name,
-                // bo_status: row.bo_status,
-                // action_status
             };
         });
 

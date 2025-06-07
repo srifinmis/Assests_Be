@@ -107,7 +107,8 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
             ro_name: isRO ? record["Unit Name"] : null,
             ro_status: isRO ? 'Pending' : null,
             bo_name: isBO ? record["Unit Name"] : null,
-            bo_status: isBO ? 'Pending' : null
+            bo_status: isBO ? 'Pending' : null,
+            ro_assigned_date: isBO ? new Date() : null,
         }));
 
         const docketIds = newRows.map(r => r.docket_id);

@@ -92,7 +92,6 @@ exports.login = async (req, res) => {
       branch: user.branchid_name,
       statesAssigned: statesAssigned  // Include states_assigned in the response
     });
-    console.log('login res: ', res.user);
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });

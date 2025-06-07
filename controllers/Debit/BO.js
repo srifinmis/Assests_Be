@@ -40,7 +40,7 @@ router.get("/boiddropdown", async (req, res) => {
                     [Op.like]: 'B%' // starts with 'B'
                 }
             },
-            attributes: ['branchid_name', 'emp_name'],
+            attributes: ['emp_id','branchid_name', 'emp_name'],
         });
         console.log('bo data dropdown: ', boUsers)
 
@@ -159,7 +159,7 @@ router.get("/detailslog", async (req, res) => {
                 ["ro_assigned_to", "bo_id"],
                 ["bo_name", "bo_name"],
                 ["bo_status", "assigned_status"],
-                ["pod", "po_number"]
+                ["ro_assigned_date", "ro_assigned_date"]
             ],
             order: [["docket_id", "ASC"]]
         });
@@ -217,9 +217,9 @@ router.get("/detailsassign", async (req, res) => {
             attributes: [
                 ["docket_id", "instakit_no"],
                 ["ho_assigned_to", "unit_id"],
-                ["ro_name", "unit_name"],
+                ["bo_name", "unit_name"],
                 ["status", "assigned_status"],
-                ["pod", "po_number"],
+                ["ro_assigned_date", "ro_assigned_date"],
                 ["ro_status", "ro_status"]
             ],
             order: [["docket_id", "ASC"]]
