@@ -200,7 +200,7 @@ router.post("/assign", async (req, res) => {
             const empId = ro_assigned_to[i];
 
             const user = await userlogins.findOne({
-                where: { emp_id: empId },
+                where: { branchid_name: empId },
                 attributes: ['emp_name'],
             });
 
@@ -274,7 +274,7 @@ router.post("/unassign", async (req, res) => {
 
 router.get("/detailsassign", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id: ", empId)
+    console.log("id ro details: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
