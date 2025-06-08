@@ -37,24 +37,14 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
         }
 
         const existingDetails = await debit_card_details.findAll();
-        for (const row of existingDetails) {
-            const existingWorkflow = await debit_card_details_workflow.findOne({
-                where: { docket_id: row.docket_id }
-            });
+        const docketIdsFromExcel = records.map(record => String(record["Instakit"]).trim());
+        const filteredRecords = existingDetails.filter(row => docketIdsFromExcel.includes(row.docket_id));
 
-            if (existingWorkflow) {
-                await debit_card_details_workflow.update(row.toJSON(), {
-                    where: { docket_id: row.docket_id }
-                });
-                // await debit_card_details_workflow.create(row.toJSON());
-                // const rowData = row.toJSON();
-                // rowData.debit_id = null;
+        for (const row of filteredRecords) {
+            const rowData = row.toJSON();
+            rowData.debit_id = null; // Set debit_id to null as per your logic
+            await debit_card_details_workflow.create(rowData);
 
-                // await debit_card_details_workflow.create(rowData);
-
-            } else {
-                await debit_card_details_workflow.create(row.toJSON());
-            }
         }
         // Step 2: Create new rows based on flag
         const isRO = flag === 'RO';
@@ -174,33 +164,23 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
         }
 
         const existingDetails = await debit_card_details.findAll();
-        for (const row of existingDetails) {
-            const existingWorkflow = await debit_card_details_workflow.findOne({
-                where: { docket_id: row.docket_id }
-            });
+        const docketIdsFromExcel = records.map(record => String(record["Instakit"]).trim());
+        const filteredRecords = existingDetails.filter(row => docketIdsFromExcel.includes(row.docket_id));
 
-            if (existingWorkflow) {
-                await debit_card_details_workflow.update(row.toJSON(), {
-                    where: { docket_id: row.docket_id }
-                });
-                // await debit_card_details_workflow.create(row.toJSON());
-                // const rowData = row.toJSON();
-                // rowData.debit_id = null;
-
-                // await debit_card_details_workflow.create(rowData);
-
-            } else {
-                await debit_card_details_workflow.create(row.toJSON());
-            }
+        for (const row of filteredRecords) {
+            const rowData = row.toJSON();
+            rowData.debit_id = null; // Set debit_id to null as per your logic
+            console.log('assign to bo ----------: ', rowData)
+            await debit_card_details_workflow.create(rowData);
         }
 
         const unitIds = records.map(r => r["Unit ID"]);
         const existingUsers = await userlogins.findAll({
             where: {
-                emp_id: unitIds
+                branchid_name: unitIds
             }
         });
-        const existingEmpIds = existingUsers.map(u => u.emp_id);
+        const existingEmpIds = existingUsers.map(u => u.branchid_name);
         const missingEmpIds = unitIds.filter(id => !existingEmpIds.includes(id));
 
         if (missingEmpIds.length > 0) {
@@ -232,7 +212,7 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
         if (existingRecords.length === 0) {
             return res.status(400).json({
                 // message: "❌  TO Assign to Branch No record found with 'Accepted' status to Assign / Already Assigned."
-                message: "❌ Some records are already assigned or not in the correct status. Please make sure the records exist and are marked as 'Accepted' before assigning them."
+                message: "❌ Some records are already assigned. Please make sure the records exist and are marked as 'Accepted' before assigning them."
             });
         }
 
@@ -249,23 +229,51 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
         } else {
             // ✅ All exist – update
             const transaction = await sequelize.transaction();
+
             try {
                 for (const record of rows) {
-                    await debit_card_details.update(
-                        {
-                            bo_status: 'Pending',
-                            ro_status: 'Assigned',
-                            ro_assigned_date: new Date(),
-                            ro_assigned_to: record.ro_assigned_to,
-                            bo_name: record.bo_name,
-                            pod: record.pod,
-                            remarks: record.remarks,
-                        },
-                        {
-                            where: { docket_id: record.docket_id },
-                            transaction,
+                    const updatedFields = {
+                        bo_status: 'Pending',
+                        ro_status: 'Assigned',
+                        ro_assigned_date: new Date(),
+                        ro_assigned_to: record.ro_assigned_to,
+                        bo_name: record.bo_name,
+                        pod: record.pod,
+                        remarks: record.remarks,
+                        loan_app_no: '' || null,
+                        customer_id: '' || null,
+                        issue_date: '' || null,
+                        cust_assigned_from: '' || null,
+                        bo_accepted_date: '' || null,
+                        bo_assigned_date: '' || null,
+                    };
+
+                    // Only include 'debit_id' if it's allowed to be null
+                    if (debit_card_details.rawAttributes.debit_id.allowNull) {
+                        updatedFields.debit_id = null;
+                    }
+
+                    // Fetch current values to prevent overwriting with null
+                    const currentRecord = await debit_card_details.findOne({
+                        where: { docket_id: record.docket_id }
+                    });
+
+                    if (currentRecord) {
+                        const currentValues = currentRecord.toJSON();
+                        // Merge current values with updated fields
+                        Object.keys(currentValues).forEach(key => {
+                            if (!(key in updatedFields)) {
+                                updatedFields[key] = currentValues[key];
+                            }
                         });
+                    }
+
+                    await debit_card_details.update(updatedFields, {
+                        where: { docket_id: record.docket_id },
+                        transaction,
+                    });
                 }
+
                 await transaction.commit();
                 fs.unlinkSync(filePath);
                 return res.status(200).json({ message: "✅ All existing records updated." });
