@@ -90,6 +90,26 @@ module.exports = function(sequelize, DataTypes) {
     cust_assigned_from: {
       type: DataTypes.STRING(50),
       allowNull: true
+    },
+    ho_asigned_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    ro_accepted_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    ro_asigned_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    bo_accepted_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    bo_asigned_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
     }
   }, {
     sequelize,
@@ -97,6 +117,13 @@ module.exports = function(sequelize, DataTypes) {
     schema: 'public',
     timestamps: false,
     indexes: [
+      {
+        name: "debit_card_details_pkey",
+        unique: true,
+        fields: [
+          { name: "debit_id" },
+        ]
+      },
       {
         name: "drebit_card_details_pkey",
         unique: true,

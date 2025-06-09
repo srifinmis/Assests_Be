@@ -40,7 +40,7 @@ router.get("/boiddropdown", async (req, res) => {
                     [Op.like]: 'B%' // starts with 'B'
                 }
             },
-            attributes: ['emp_id','branchid_name', 'emp_name'],
+            attributes: ['emp_id', 'branchid_name', 'emp_name'],
         });
         console.log('bo data dropdown: ', boUsers)
 
@@ -52,7 +52,8 @@ router.get("/boiddropdown", async (req, res) => {
 });
 
 router.get("/bo-report", async (req, res) => {
-    const empId = req.headers["emp_id"];
+    const emp = req.headers["emp_id"];
+    const empId = emp.split('-')[0];
     // console.log("id: ", empId);
 
     if (!empId) {
@@ -144,7 +145,8 @@ router.get("/details", async (req, res) => {
 
 
 router.get("/detailslog", async (req, res) => {
-    const empId = req.headers["emp_id"];
+    const emp = req.headers["emp_id"];
+    const empId = emp.split('-')[0];
     console.log("id detailslog: ", empId)
 
     if (!empId) {
@@ -204,7 +206,8 @@ router.post("/accept", async (req, res) => {
 });
 
 router.get("/detailsassign", async (req, res) => {
-    const empId = req.headers["emp_id"];
+    const emp = req.headers["emp_id"];
+    const empId = emp.split('-')[0];
     console.log("id: ", empId)
 
     if (!empId) {

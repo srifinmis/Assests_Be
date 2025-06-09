@@ -2,10 +2,13 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const XLSX = require('xlsx');
+const { Op } = require("sequelize");
+const ExcelJS = require('exceljs');
 const fs = require('fs');
 const path = require('path');
 const { sequelize } = require("../config/db");
 const initModels = require("../models/init-models");
+const { raw } = require('body-parser');
 
 const models = initModels(sequelize);
 const {
@@ -23,7 +26,7 @@ const upload = multer({ storage });
 // POST /bulk/upload-ho
 router.post('/upload-ho', upload.single('file'), async (req, res) => {
     const { requested_by, flag } = req.body;
-    console.log('hobulk upload: ', req.body)
+    // console.log('hobulk upload: ', req.body)
 
     try {
         const filePath = req.file.path;
@@ -55,33 +58,53 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
             return res.status(400).json({ message: '❌ Invalid flag. Must be "RO" or "BO".' });
         }
 
-        const unitIds = records.map(r => r["Unit ID"]);
+        const unitIds = records.map(r => r["Unit ID"]).filter(Boolean);
 
         const whereCondition = isBO
-            ? { branchid_name: unitIds }
+            ? {
+                [Op.or]: unitIds.map(prefix => ({
+                    branchid_name: {
+                        [Op.like]: `${prefix}-%`,
+                    },
+                })),
+            }
             : { emp_id: unitIds };
-
         console.log('where : ', whereCondition);
 
         const existingUsers = await userlogins.findAll({
-            where: whereCondition
+            where: whereCondition,
+            raw: true
         });
-
         console.log('existingUsers : ', existingUsers);
 
         // Dynamically map based on the flag
         const existingUnitIds = isBO
-            ? existingUsers.map(u => u.branchid_name)
+            ? existingUsers.map(u => u.branchid_name.split('-')[0])
             : existingUsers.map(u => u.emp_id);
 
         const missingEmpIds = unitIds.filter(id => !existingUnitIds.includes(id));
 
         if (missingEmpIds.length > 0) {
             fs.unlinkSync(filePath);
-            return res.status(400).json({
-                message: `❌ Upload aborted. Check Unit IDs do not exist in the system: [${missingEmpIds.join(', ')}]`,
-                missing: missingEmpIds,
+
+            const workbook = new ExcelJS.Workbook();
+
+            // Sheet 1: Missing IDs
+            const worksheet = workbook.addWorksheet('Missing Unit IDs');
+            worksheet.columns = [
+                { header: 'Unit IDs Not Found ', key: 'empId', width: 30 }
+            ];
+            missingEmpIds.forEach(id => {
+                worksheet.addRow({ empId: id });
             });
+
+            // Set response headers
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=missing_unit_ids.xlsx');
+
+            // Send the Excel workbook
+            await workbook.xlsx.write(res);
+            return res.end();
         }
 
         const newRows = records.map(record => ({
@@ -113,10 +136,23 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
 
         if (missingDocketIds.length > 0 && existingDocketIds.length > 0) {
             fs.unlinkSync(filePath);
-            return res.status(400).json({
-                message: `❌ Upload aborted. Some Instakit(s) are missing in the File Please Check Again.-- [ ${missingDocketIds} ]`,
-                missing: missingDocketIds,
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Missing Instakit IDs');
+            worksheet.columns = [
+                { header: 'InstakitNo. Not Found', key: 'empId', width: 30 }
+            ];
+            missingDocketIds.forEach(id => {
+                worksheet.addRow({ empId: id });
             });
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=missing_Instakitids.xlsx');
+            await workbook.xlsx.write(res);
+            return res.end();
+
+            // return res.status(400).json({
+            //     message: `❌ Upload aborted. Some Instakit(s) are missing in the File Please Check Again.-- [ ${missingDocketIds} ]`,
+            //     missing: missingDocketIds,
+            // });
         } else if (missingDocketIds.length === docketIds.length) {
             // All new - insert
             await debit_card_details.bulkCreate(newRows);
@@ -174,21 +210,35 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
             await debit_card_details_workflow.create(rowData);
         }
 
-        const unitIds = records.map(r => r["Unit ID"]);
+        const unitIds = records.map(r => r["Unit ID"]).filter(Boolean);
         const existingUsers = await userlogins.findAll({
             where: {
-                branchid_name: unitIds
+                [Op.or]: unitIds.map(prefix => ({
+                    branchid_name: { [Op.like]: `${prefix}-%` }
+                }))
             }
         });
-        const existingEmpIds = existingUsers.map(u => u.branchid_name);
+        const existingEmpIds = existingUsers.map(u => u.branchid_name.split('-')[0])
         const missingEmpIds = unitIds.filter(id => !existingEmpIds.includes(id));
 
         if (missingEmpIds.length > 0) {
             fs.unlinkSync(filePath);
-            return res.status(400).json({
-                message: `❌ Upload aborted. Check Unit IDs do not exist in the system: [${missingEmpIds.join(', ')}]`,
-                missing: missingEmpIds,
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Missing Unit IDs');
+            worksheet.columns = [
+                { header: 'Unit IDs Not Found', key: 'empId', width: 30 }
+            ];
+            missingEmpIds.forEach(id => {
+                worksheet.addRow({ empId: id });
             });
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=missing_Instakitids.xlsx');
+            await workbook.xlsx.write(res);
+            return res.end();
+            // return res.status(400).json({
+            //     message: `❌ Upload aborted. Check Unit IDs do not exist in the system: [${missingEmpIds.join(', ')}]`,
+            //     missing: missingEmpIds,
+            // });
         }
 
         // Prepare rows
@@ -201,6 +251,34 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
         }));
 
         const docketIds = rows.map(r => r.docket_id);
+        //
+        if (docketIds.length > 0) {
+            const existdocketId = await debit_card_details.findAll({
+                where: {
+                    docket_id: docketIds,
+                },
+                raw: true,
+            });
+
+            const foundIds = existdocketId.map(r => r.docket_id);
+            const missingdocketIds = docketIds.filter(id => !foundIds.includes(id));
+
+            if (missingdocketIds.length > 0) {
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('Missing Instakit IDs');
+                worksheet.columns = [
+                    { header: 'InstakitNo. Not Found', key: 'empId', width: 30 }
+                ];
+                missingdocketIds.forEach(id => {
+                    worksheet.addRow({ empId: id });
+                });
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                res.setHeader('Content-Disposition', 'attachment; filename=missing_Instakitids.xlsx');
+                await workbook.xlsx.write(res);
+                return res.end();
+            }
+        }
+        //
 
         // Fetch existing records from DB
         const existingRecords = await debit_card_details.findAll({
@@ -222,10 +300,22 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
         if (missingDocketIds.length > 0 && existingDocketIds.length > 0) {
             // ❌ Some exist, some don't – abort
             fs.unlinkSync(filePath);
-            return res.status(400).json({
-                message: `❌ Upload aborted. Some docket_id(s) are Not Valid -- [ ${missingDocketIds} ]`,
-                missing: missingDocketIds,
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Missing Instakit IDs');
+            worksheet.columns = [
+                { header: 'InstakitNo. Not Found', key: 'empId', width: 30 }
+            ];
+            missingDocketIds.forEach(id => {
+                worksheet.addRow({ empId: id });
             });
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=missing_Instakitids.xlsx');
+            await workbook.xlsx.write(res);
+            return res.end();
+            // return res.status(400).json({
+            //     message: `❌ Upload aborted. Some docket_id(s) are Not Valid -- [ ${missingDocketIds} ]`,
+            //     missing: missingDocketIds,
+            // });
         } else {
             // ✅ All exist – update
             const transaction = await sequelize.transaction();
@@ -276,7 +366,7 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
 
                 await transaction.commit();
                 fs.unlinkSync(filePath);
-                return res.status(200).json({ message: "✅ All existing records updated." });
+                return res.status(200).json({ message: "✅ Assigned to Branch Successfully." });
             } catch (error) {
                 await transaction.rollback();
                 console.error(error);
@@ -308,13 +398,41 @@ router.post('/upload-ro', upload.single('file'), async (req, res) => {
 
         // Prepare rows
         const rows = records.map((record) => ({
-            docket_id: String(record["Instakit"]),
+            docket_id: String(record["Instakit"]).trim(),
             pod: record["Pod"],
             remarks: record["Remarks"] || null,
-            ro_status: 'Accepted'
+            ro_status: 'Accepted',
         }));
 
         const docketIds = rows.map(r => r.docket_id);
+
+        if (docketIds.length > 0) {
+            const existdocketId = await debit_card_details.findAll({
+                where: {
+                    docket_id: docketIds,
+                },
+                raw: true,
+            });
+
+            const foundIds = existdocketId.map(r => r.docket_id);
+            const missingdocketIds = docketIds.filter(id => !foundIds.includes(id));
+
+            if (missingdocketIds.length > 0) {
+                const workbook = new ExcelJS.Workbook();
+                // Sheet 1: Missing IDs
+                const worksheet = workbook.addWorksheet('Missing Instakit IDs');
+                worksheet.columns = [
+                    { header: 'InstakitNo. Not Found', key: 'empId', width: 30 }
+                ];
+                missingdocketIds.forEach(id => {
+                    worksheet.addRow({ empId: id });
+                });
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                res.setHeader('Content-Disposition', 'attachment; filename=missing_Instakitids.xlsx');
+                await workbook.xlsx.write(res);
+                return res.end();
+            }
+        }
 
         // Fetch existing records from DB
         const existingRecords = await debit_card_details.findAll({
@@ -327,7 +445,7 @@ router.post('/upload-ro', upload.single('file'), async (req, res) => {
 
         if (existingRecords.length === 0) {
             return res.status(400).json({
-                message: "❌ No existing records found with the specified instakitNo / 'Pending' status to Accept."
+                message: "❌ No InstakitNo to Accept / Already Accepted."
             });
         }
 
@@ -337,10 +455,23 @@ router.post('/upload-ro', upload.single('file'), async (req, res) => {
         if (missingDocketIds.length > 0 && existingDocketIds.length > 0) {
             // ❌ Some exist, some don't – abort
             fs.unlinkSync(filePath);
-            return res.status(400).json({
-                message: `❌ Upload aborted. Some docket_id(s) are missing in DB / Status not in Pending -- [ ${missingDocketIds} ]`,
-                missing: missingDocketIds,
+            const workbook = new ExcelJS.Workbook();
+            // Sheet 1: Missing IDs
+            const worksheet = workbook.addWorksheet('Missing Instakit IDs');
+            worksheet.columns = [
+                { header: 'InstakitNo. Not Found / Status not in Pending', key: 'empId', width: 30 }
+            ];
+            missingDocketIds.forEach(id => {
+                worksheet.addRow({ empId: id });
             });
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=missing_Instakitids.xlsx');
+            await workbook.xlsx.write(res);
+            return res.end();
+            // return res.status(400).json({
+            //     message: `❌ Upload aborted. Some docket_id(s) are missing / Status not in Pending -- [ ${missingDocketIds} ]`,
+            //     missing: missingDocketIds,
+            // });
         } else {
             // ✅ All exist – update
             for (const record of rows) {
@@ -385,6 +516,34 @@ router.post('/upload-bo', upload.single('file'), async (req, res) => {
 
         const docketIds = rows.map(r => r.docket_id);
 
+        if (docketIds.length > 0) {
+            const existdocketId = await debit_card_details.findAll({
+                where: {
+                    docket_id: docketIds,
+                },
+                raw: true,
+            });
+
+            const foundIds = existdocketId.map(r => r.docket_id);
+            const missingdocketIds = docketIds.filter(id => !foundIds.includes(id));
+
+            if (missingdocketIds.length > 0) {
+                const workbook = new ExcelJS.Workbook();
+                // Sheet 1: Missing IDs
+                const worksheet = workbook.addWorksheet('Missing Instakit IDs');
+                worksheet.columns = [
+                    { header: 'InstakitNo. Not Found', key: 'empId', width: 30 }
+                ];
+                missingdocketIds.forEach(id => {
+                    worksheet.addRow({ empId: id });
+                });
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                res.setHeader('Content-Disposition', 'attachment; filename=missing_Instakitids.xlsx');
+                await workbook.xlsx.write(res);
+                return res.end();
+            }
+        }
+
         // Fetch existing records from DB
         const existingRecords = await debit_card_details.findAll({
             where: {
@@ -404,10 +563,23 @@ router.post('/upload-bo', upload.single('file'), async (req, res) => {
         if (missingDocketIds.length > 0 && existingDocketIds.length > 0) {
             // ❌ Some exist, some don't – abort
             fs.unlinkSync(filePath);
-            return res.status(400).json({
-                message: `❌ Upload aborted. Some docket_id(s) are missing in the DB -- [ ${missingDocketIds} ]`,
-                missing: missingDocketIds,
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Missing Instakit IDs');
+            worksheet.columns = [
+                { header: 'InstakitNo. Not Found / Status not in Pending', key: 'empId', width: 30 }
+            ];
+            missingDocketIds.forEach(id => {
+                worksheet.addRow({ empId: id });
             });
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=missing_Instakitids.xlsx');
+            await workbook.xlsx.write(res);
+            return res.end();
+
+            // return res.status(400).json({
+            //     message: `❌ Upload aborted. Some docket_id(s) are missing in the DB -- [ ${missingDocketIds} ]`,
+            //     missing: missingDocketIds,
+            // });
         } else {
             // ✅ All exist – update
             for (const record of rows) {
@@ -418,7 +590,7 @@ router.post('/upload-bo', upload.single('file'), async (req, res) => {
                     });
             }
             fs.unlinkSync(filePath);
-            return res.status(200).json({ message: "✅ All existing records updated." });
+            return res.status(200).json({ message: "✅ Accepted Successfully." });
         }
 
     } catch (error) {
