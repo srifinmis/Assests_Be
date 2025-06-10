@@ -1,4 +1,5 @@
 const express = require("express");
+const { Op } = require("sequelize");
 const router = express.Router();
 const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
@@ -9,7 +10,7 @@ const { debit_card_details, userlogins } = models;
 
 //ho code:::
 router.get("/ho-report", async (req, res) => {
-    const empId = req.headers["emp_id"];
+    const empId = req.headers["emp_id2"];
     // console.log("id ho: ", empId);
 
     if (!empId) {
@@ -19,7 +20,7 @@ router.get("/ho-report", async (req, res) => {
     try {
         const results = await debit_card_details.findAll({
             where: { ho_by: empId },
-            attributes: ["docket_id", "ho_assigned_to", "ho_assigned_date", "ro_name", "bo_name", "status", "pod"]
+            attributes: ["docket_id", "ho_assigned_to", "ho_asigned_by", "ho_assigned_date", "ro_name", "bo_name", "status", "pod"]
         });
 
         res.json(results);
@@ -30,8 +31,9 @@ router.get("/ho-report", async (req, res) => {
 });
 
 router.get("/ro-report", async (req, res) => {
-    const empId = req.headers["emp_id"];
-    // console.log("id getting: ", empId);
+    const emp = req.headers["emp_id2"];
+    const empId = emp.split('-')[0];
+    console.log("id ro report: ", empId);
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -121,8 +123,9 @@ router.get("/details", async (req, res) => {
 
 
 router.get("/detailslog", async (req, res) => {
-    const empId = req.headers["emp_id"];
-    // console.log("id: ", empId)
+    const emp = req.headers["emp_id2"];
+    const empId = emp.split('-')[0];
+    // console.log("details pending ro acceptance: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -152,7 +155,8 @@ router.get("/detailslog", async (req, res) => {
 
 
 router.post("/accept", async (req, res) => {
-    const { docketIds } = req.body;
+    const { docketIds, roAcceptedBy } = req.body;
+    // console.log('accepted by ro : ', req.body)
 
     if (!Array.isArray(docketIds) || docketIds.length === 0) {
         return res.status(400).json({ error: "docketIds must be a non-empty array" });
@@ -162,6 +166,7 @@ router.post("/accept", async (req, res) => {
         const result = await debit_card_details.update(
             {
                 ro_status: "Accepted",
+                ro_accepted_by: roAcceptedBy,
                 ro_accepted_date: new Date()
             },
             {
@@ -182,7 +187,7 @@ router.post("/accept", async (req, res) => {
 });
 
 router.post("/assign", async (req, res) => {
-    const { docketIds, ro_assigned_to } = req.body;
+    const { docketIds, ro_assigned_to, ro_asigned_by } = req.body;
     // console.log('assigned to bo: ', req.body);
 
     if (
@@ -200,21 +205,29 @@ router.post("/assign", async (req, res) => {
         for (let i = 0; i < docketIds.length; i++) {
             const empId = ro_assigned_to[i];
 
+            const prefix = empId.split("-")[0]; // Extract 'B179'
+
             const user = await userlogins.findOne({
-                where: { branchid_name: empId },
-                attributes: ['emp_name'],
+                where: {
+                    branchid_name: {
+                        [Op.like]: `${prefix}-%`,
+                    },
+                },
+                attributes: ['branchid_name'],
             });
+
 
             if (!user) {
                 console.warn(`No user found for emp_id: ${empId}`);
                 continue; // skip this one
             }
 
-            const empName = user.emp_name;
+            const empName = user.branchid_name.split('-')[1];
 
             const result = await debit_card_details.update(
                 {
-                    ro_assigned_to: empId,
+                    ro_assigned_to: prefix,
+                    ro_asigned_by: ro_asigned_by,
                     ro_assigned_date: new Date(),
                     bo_name: empName,
                     bo_status: "Pending",
@@ -273,9 +286,10 @@ router.post("/unassign", async (req, res) => {
 });
 
 
-router.get("/detailsassign", async (req, res) => {
-    const empId = req.headers["emp_id"];
-    // console.log("id ro details: ", empId)
+router.get("/rodetailsassign", async (req, res) => {
+    const emp = req.headers["emp_id2"];
+    const empId = emp.split('-')[0];
+    // console.log("details : ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });

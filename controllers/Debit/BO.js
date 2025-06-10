@@ -52,7 +52,7 @@ router.get("/boiddropdown", async (req, res) => {
 });
 
 router.get("/bo-report", async (req, res) => {
-    const emp = req.headers["emp_id"];
+    const emp = req.headers["emp_id2"];
     const empId = emp.split('-')[0];
     // console.log("id: ", empId);
 
@@ -145,7 +145,7 @@ router.get("/details", async (req, res) => {
 
 
 router.get("/detailslog", async (req, res) => {
-    const emp = req.headers["emp_id"];
+    const emp = req.headers["emp_id2"];
     const empId = emp.split('-')[0];
     // console.log("id detailslog: ", empId)
 
@@ -176,7 +176,7 @@ router.get("/detailslog", async (req, res) => {
 
 
 router.post("/accept", async (req, res) => {
-    const { docketIds } = req.body;
+    const { docketIds, acceptedEmp } = req.body;
 
     if (!Array.isArray(docketIds) || docketIds.length === 0) {
         return res.status(400).json({ error: "docketIds must be a non-empty array" });
@@ -185,6 +185,7 @@ router.post("/accept", async (req, res) => {
     try {
         const result = await debit_card_details.update(
             {
+                bo_accepted_by: acceptedEmp,
                 bo_status: "Accepted",
                 bo_accepted_date: new Date()
             },
@@ -206,7 +207,7 @@ router.post("/accept", async (req, res) => {
 });
 
 router.get("/detailsassign", async (req, res) => {
-    const emp = req.headers["emp_id"];
+    const emp = req.headers["emp_id2"];
     const empId = emp.split('-')[0];
     // console.log("id: ", empId)
 

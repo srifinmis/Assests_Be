@@ -32,6 +32,7 @@ router.post("/createcustomer", async (req, res) => {
                 loan_app_no: loanApplicationNo,
                 issue_date: issuedDate,
                 cust_assigned_from: requestedBy,
+                bo_asigned_by: requestedBy,
                 bo_status: 'Assigned',
                 bo_assigned_date: new Date()
             },
@@ -59,8 +60,8 @@ router.get("/customerdetails", async (req, res) => {
                 bo_status: 'Assigned'
             }
         });
-        console.log("reqestedby: ", requestedBy)
-        console.log("customers: ", records)
+        // console.log("reqestedby: ", requestedBy)
+        // console.log("customers: ", records)
 
         if (records.length === 0) {
             return res.status(404).json({ message: "No records found for the given requestedBy" });
@@ -79,7 +80,7 @@ router.get("/customerdetails", async (req, res) => {
 router.get("/customer/byid", async (req, res) => {
     try {
         const { docket_id } = req.query;
-        console.log("recived docket_id : ", docket_id)
+        // console.log("recived docket_id : ", docket_id)
 
         if (!docket_id) {
             return res.status(400).json({ error: "docket Id parameter is required" });

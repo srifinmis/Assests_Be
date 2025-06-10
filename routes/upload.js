@@ -25,7 +25,7 @@ const upload = multer({ storage });
 
 // POST /bulk/upload-ho
 router.post('/upload-ho', upload.single('file'), async (req, res) => {
-    const { requested_by, flag } = req.body;
+    const { requested_by, requested_byemp, flag } = req.body;
     // console.log('hobulk upload: ', req.body)
 
     try {
@@ -60,6 +60,16 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
 
         const unitIds = records.map(r => r["Unit ID"]).filter(Boolean);
 
+        // const whereCondition = isBO
+        //     ? {
+        //         [Op.or]: unitIds.map(prefix => ({
+        //             branchid_name: {
+        //                 [Op.like]: `${prefix}-%`,
+        //             },
+        //         })),
+        //     }
+        //     : { emp_id: unitIds };
+
         const whereCondition = isBO
             ? {
                 [Op.or]: unitIds.map(prefix => ({
@@ -68,7 +78,13 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
                     },
                 })),
             }
-            : { emp_id: unitIds };
+            : {
+                [Op.or]: unitIds.map(prefix => ({
+                    regionid_name: {
+                        [Op.like]: `${prefix}-%`,
+                    },
+                })),
+            };
         console.log('where : ', whereCondition);
 
         const existingUsers = await userlogins.findAll({
@@ -80,7 +96,7 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
         // Dynamically map based on the flag
         const existingUnitIds = isBO
             ? existingUsers.map(u => u.branchid_name.split('-')[0])
-            : existingUsers.map(u => u.emp_id);
+            : existingUsers.map(u => u.regionid_name.split('-')[0]);
 
         const missingEmpIds = unitIds.filter(id => !existingUnitIds.includes(id));
 
@@ -116,6 +132,7 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
             remarks: record["Remarks"] || null,
             ho_assigned_date: new Date(),
             ho_by: requested_by,
+            ho_asigned_by: requested_byemp,
             send_to: isRO ? 'RO' : 'BO',
             ro_name: isRO ? record["Unit Name"] : null,
             ro_status: isRO ? 'Pending' : null,
@@ -186,7 +203,7 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
 //RO will assign to bo bulkly RO assigns to BO
 // POST /bulk/upload-roassignbo
 router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
-    const { requested_by } = req.body;
+    const { requested_by, accepted_by } = req.body;
 
     try {
         const filePath = req.file.path;
@@ -329,6 +346,7 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
                         ro_assigned_to: record.ro_assigned_to,
                         bo_name: record.bo_name,
                         pod: record.pod,
+                        ro_asigned_by: accepted_by,
                         remarks: record.remarks,
                         loan_app_no: '' || null,
                         customer_id: '' || null,
@@ -382,8 +400,9 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
 
 
 // POST /bulk/upload-ro accept
-router.post('/upload-ro', upload.single('file'), async (req, res) => {
-    const { requested_by } = req.body;
+router.post('/acceptupload-ro', upload.single('file'), async (req, res) => {
+    const { requested_by, accepted_by } = req.body;
+    console.log('bilk accept ro: ', req.body)
 
     try {
         const filePath = req.file.path;
@@ -476,7 +495,7 @@ router.post('/upload-ro', upload.single('file'), async (req, res) => {
             // ✅ All exist – update
             for (const record of rows) {
                 await debit_card_details.update(
-                    { ro_status: "Accepted", ro_accepted_date: new Date() },
+                    { ro_accepted_by: accepted_by, ro_status: "Accepted", ro_accepted_date: new Date() },
                     {
                         where: { docket_id: record.docket_id }
                     });
@@ -492,8 +511,8 @@ router.post('/upload-ro', upload.single('file'), async (req, res) => {
 });
 
 // POST /bulk/upload-bo accept code
-router.post('/upload-bo', upload.single('file'), async (req, res) => {
-    const { requested_by } = req.body;
+router.post('/acceptupload-bo', upload.single('file'), async (req, res) => {
+    const { requested_by, accepted_by } = req.body;
 
     try {
         const filePath = req.file.path;
@@ -584,7 +603,7 @@ router.post('/upload-bo', upload.single('file'), async (req, res) => {
             // ✅ All exist – update
             for (const record of rows) {
                 await debit_card_details.update(
-                    { bo_status: "Accepted", bo_accepted_date: new Date() },
+                    { bo_accepted_by: accepted_by, bo_status: "Accepted", bo_accepted_date: new Date() },
                     {
                         where: { docket_id: record.docket_id }
                     });

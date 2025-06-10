@@ -90,6 +90,36 @@ module.exports = function(sequelize, DataTypes) {
     cust_assigned_from: {
       type: DataTypes.STRING(50),
       allowNull: true
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
+    },
+    ho_asigned_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    ro_accepted_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    ro_asigned_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    bo_accepted_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    bo_asigned_by: {
+      type: DataTypes.STRING(50),
+      allowNull: true
     }
   }, {
     sequelize,

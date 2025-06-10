@@ -3,6 +3,7 @@ module.exports = function(sequelize, DataTypes) {
   return sequelize.define('debit_card_details', {
     debit_id: {
       autoIncrement: true,
+      autoIncrementIdentity: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
@@ -110,6 +111,11 @@ module.exports = function(sequelize, DataTypes) {
     bo_asigned_by: {
       type: DataTypes.STRING(50),
       allowNull: true
+    },
+    updatedby: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
     }
   }, {
     sequelize,
@@ -119,13 +125,6 @@ module.exports = function(sequelize, DataTypes) {
     indexes: [
       {
         name: "debit_card_details_pkey",
-        unique: true,
-        fields: [
-          { name: "debit_id" },
-        ]
-      },
-      {
-        name: "drebit_card_details_pkey",
         unique: true,
         fields: [
           { name: "debit_id" },

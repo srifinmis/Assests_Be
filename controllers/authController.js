@@ -39,11 +39,19 @@ exports.login = async (req, res) => {
     const designationcheck = user.designation_name;
     console.log('designation : ', designationcheck);
 
-    const validDesignations = ['Branch Manager', 'CSM'];
+    const validDesignations = ['Branch Manager', 'CSM', 'Sr CSM'];
+    const validRegionDesignations = ['RO'];
+    const validHODesignations = ['HO', 'Head Office'];
 
-    const assignedTo = validDesignations.includes(designationcheck)
-      ? user.branchid_name
-      : user.emp_id;
+    const assignedTo =
+      validDesignations.includes(designationcheck)
+        ? user.branchid_name
+        : validRegionDesignations.includes(designationcheck)
+          ? user.regionid_name
+          : validHODesignations.includes(designationcheck)
+            ? (user.regionid_name || user.branchid_name)
+            : null;
+    // user.emp_id;
     console.log('assigned to : ', assignedTo)
 
 
@@ -69,6 +77,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       {
         id: user.system_id,
+        debit: assignedTo,
         Role: roleNames,
         modules: modulesList,
         branch: user.branchid_name,
@@ -82,8 +91,11 @@ exports.login = async (req, res) => {
       message: "Login successful",
       token,
       user: {
-        emp_id: assignedTo,
-        emp_id2: user.emp_id,
+        emp_id: user.emp_id,
+        emp_id2: assignedTo,
+        // emp_id: assignedTo,
+        // emp_id2: user.emp_id,
+        debitusers: assignedTo,
         name: user.emp_name,
         role: user.designation_name,
         branch: user.branchid_name
