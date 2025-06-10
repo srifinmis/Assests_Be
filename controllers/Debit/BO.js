@@ -42,7 +42,7 @@ router.get("/boiddropdown", async (req, res) => {
             },
             attributes: ['emp_id', 'branchid_name', 'emp_name'],
         });
-        console.log('bo data dropdown: ', boUsers)
+        // console.log('bo data dropdown: ', boUsers)
 
         res.json(boUsers);
     } catch (error) {
@@ -116,7 +116,7 @@ router.get("/bo-report", async (req, res) => {
 
 router.get("/details", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id: ", empId)
+    // console.log("id: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -134,7 +134,7 @@ router.get("/details", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]]
         });
-        console.log("response data: ", bos)
+        // console.log("response data: ", bos)
 
         res.json(ros);
     } catch (error) {
@@ -147,7 +147,7 @@ router.get("/details", async (req, res) => {
 router.get("/detailslog", async (req, res) => {
     const emp = req.headers["emp_id"];
     const empId = emp.split('-')[0];
-    console.log("id detailslog: ", empId)
+    // console.log("id detailslog: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -165,7 +165,7 @@ router.get("/detailslog", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]]
         });
-        console.log("response data: ", bos)
+        // console.log("response data: ", bos)
 
         res.json(bos);
     } catch (error) {
@@ -208,7 +208,7 @@ router.post("/accept", async (req, res) => {
 router.get("/detailsassign", async (req, res) => {
     const emp = req.headers["emp_id"];
     const empId = emp.split('-')[0];
-    console.log("id: ", empId)
+    // console.log("id: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -227,7 +227,7 @@ router.get("/detailsassign", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]]
         });
-        console.log("response data: ", ros)
+        // console.log("response data: ", ros)
 
         res.json(ros);
     } catch (error) {

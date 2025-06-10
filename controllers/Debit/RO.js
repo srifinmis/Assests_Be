@@ -7,9 +7,10 @@ const { where } = require("sequelize");
 const models = initModels(sequelize);
 const { debit_card_details, userlogins } = models;
 
+//ho code:::
 router.get("/ho-report", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id ho: ", empId);
+    // console.log("id ho: ", empId);
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -30,7 +31,7 @@ router.get("/ho-report", async (req, res) => {
 
 router.get("/ro-report", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id getting: ", empId);
+    // console.log("id getting: ", empId);
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -54,7 +55,7 @@ router.get("/ro-report", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]],
         });
-        console.log('report: ', results)
+        // console.log('report: ', results)
 
         const formattedResults = results.map((row) => {
             const status = row.dataValues.ro_status;
@@ -91,7 +92,7 @@ router.get("/ro-report", async (req, res) => {
 
 router.get("/details", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id: ", empId)
+    // console.log("id: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -109,7 +110,7 @@ router.get("/details", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]]
         });
-        console.log("response data: ", ros)
+        // console.log("response data: ", ros)
 
         res.json(ros);
     } catch (error) {
@@ -121,7 +122,7 @@ router.get("/details", async (req, res) => {
 
 router.get("/detailslog", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id: ", empId)
+    // console.log("id: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -140,7 +141,7 @@ router.get("/detailslog", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]]
         });
-        console.log("response data: ", ros)
+        // console.log("response data: ", ros)
 
         res.json(ros);
     } catch (error) {
@@ -182,7 +183,7 @@ router.post("/accept", async (req, res) => {
 
 router.post("/assign", async (req, res) => {
     const { docketIds, ro_assigned_to } = req.body;
-    console.log('assigned to bo: ', req.body);
+    // console.log('assigned to bo: ', req.body);
 
     if (
         !Array.isArray(docketIds) ||
@@ -274,7 +275,7 @@ router.post("/unassign", async (req, res) => {
 
 router.get("/detailsassign", async (req, res) => {
     const empId = req.headers["emp_id"];
-    console.log("id ro details: ", empId)
+    // console.log("id ro details: ", empId)
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });
@@ -293,7 +294,7 @@ router.get("/detailsassign", async (req, res) => {
             ],
             order: [["docket_id", "ASC"]]
         });
-        console.log("response data: ", ros)
+        // console.log("response data: ", ros)
 
         res.json(ros);
     } catch (error) {
