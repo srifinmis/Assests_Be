@@ -69,6 +69,7 @@ exports.login = async (req, res) => {
     const modulesList = [...new Set(
       roleModules.map(rm => rm.module?.module_name).filter(Boolean)
     )];
+    console.log('Modules: ', modulesList)
 
     // Fetch the states_assigned from userlogins table
     const statesAssigned = user.states_assigned || [];
