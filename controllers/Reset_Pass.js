@@ -21,7 +21,7 @@ router.post("/password", async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     await userlogins.update(
-      { password: hashedPassword },
+      { passwd_hash: hashedPassword },
       { where: { emp_id } }
     );
 
