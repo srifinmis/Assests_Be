@@ -21,9 +21,10 @@ router.post("/password", async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     await userlogins.update(
-      { passwd_hash: hashedPassword },
+      { password: hashedPassword },
       { where: { emp_id } }
     );
+    console.log('response: ', response)
 
     res.status(200).json({ message: "Password reset successful." });
   } catch (error) {

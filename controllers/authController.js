@@ -39,10 +39,9 @@ exports.login = async (req, res) => {
     const designationcheck = user.designation_name;
     console.log('designation : ', designationcheck);
 
-    const validBranchDesignations = ['Branch Manager', 'CSM', 'Sr CSM', 'Area Manager', ''];
-    const validRegionDesignations = ['RO', 'BCM', 'Regional Credit Manager', 'Executive'];
-    const validHODesignations = ['HO', 'Head Office', 'Principal Manager', 'Assistant Manager', 'Lead Manager'];
-
+    const validDesignations = ['Branch Manager', 'CSM', 'Sr CSM'];
+    const validRegionDesignations = ['RO'];
+    const validHODesignations = ['HO', 'Head Office'];
 
     const assignedTo =
       validBranchDesignations.includes(designationcheck)
@@ -70,6 +69,7 @@ exports.login = async (req, res) => {
     const modulesList = [...new Set(
       roleModules.map(rm => rm.module?.module_name).filter(Boolean)
     )];
+    console.log('Modules: ', modulesList)
 
     // Fetch the states_assigned from userlogins table
     const statesAssigned = user.states_assigned || [];

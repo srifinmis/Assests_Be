@@ -619,4 +619,64 @@ router.post('/acceptupload-bo', upload.single('file'), async (req, res) => {
 });
 
 
+router.post('/upload-recorn', upload.single('file'), async (req, res) => {
+    const { requested_by, accepted_by } = req.body;
+
+    try {
+        const filePath = req.file.path;
+        const workbook = XLSX.readFile(filePath);
+        const firstSheet = workbook.SheetNames[0];
+        const records = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+
+        if (!records.length) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ message: '❌ Empty Excel file.' });
+        }
+
+        // Prepare rows with customer_id
+        const rows = records.map((record) => ({
+            customer_id: String(record["Customer ID"]),
+        }));
+
+        const customerIds = rows.map(r => r.customer_id);
+
+        // Fetch all existing customer_ids from DB
+        const existing = await debit_card_details.findAll({
+            where: { customer_id: customerIds },
+            attributes: ['customer_id'],
+            raw: true,
+        });
+
+        const foundCustomerIds = existing.map(r => r.customer_id);
+        const missingCustomerIds = customerIds.filter(id => !foundCustomerIds.includes(id));
+
+        if (missingCustomerIds.length > 0) {
+            // ❌ Generate error Excel and abort
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Missing Customer IDs');
+            worksheet.columns = [
+                { header: 'Customer ID Not Found', key: 'custId', width: 30 }
+            ];
+            missingCustomerIds.forEach(id => {
+                worksheet.addRow({ custId: id });
+            });
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=missing_customer_ids.xlsx');
+            fs.unlinkSync(filePath);
+            await workbook.xlsx.write(res);
+            return res.end();
+        }
+
+        // ✅ All records exist – proceed with update
+        fs.unlinkSync(filePath);
+        return res.status(200).json({ message: "✅ All Customer ID are Existing." });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "❌ Failed to process file.", error: error.message });
+    }
+});
+
+
+
 module.exports = router;
