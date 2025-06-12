@@ -5,7 +5,7 @@ const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
 
 const models = initModels(sequelize);
-const { debit_card_details, userlogins } = models;
+const { debit_card_details, userlogins, reagion_branchmap } = models;
 
 router.get("/instakitIds", async (req, res) => {
 
@@ -32,19 +32,21 @@ router.get("/instakitIds", async (req, res) => {
 });
 
 router.get("/boiddropdown", async (req, res) => {
+    const requestedBy = req.headers["requested"];
+    console.log('requestedby : ', requestedBy)
 
     try {
-        const boUsers = await userlogins.findAll({
-            where: {
-                emp_id: {
-                    [Op.like]: 'B%' // starts with 'B'
-                }
-            },
-            attributes: ['emp_id', 'branchid_name', 'emp_name'],
-        });
-        // console.log('bo data dropdown: ', boUsers)
 
-        res.json(boUsers);
+        const branches = await reagion_branchmap.findAll({
+            where: {
+                regionid_name: requestedBy
+            },
+            attributes: ['branchid_name'],
+            raw: true
+        });
+        console.log('branch : ', branches)
+
+        res.json(branches);
     } catch (error) {
         console.error("Error fetching BO details:", error);
         res.status(500).json({ error: "Failed to fetch BO details" });
