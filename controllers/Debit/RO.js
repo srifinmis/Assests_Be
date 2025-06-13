@@ -33,7 +33,7 @@ router.get("/ho-report", async (req, res) => {
 router.get("/ro-report", async (req, res) => {
     const emp = req.headers["emp_id2"];
     const empId = emp.split('-')[0];
-    console.log("id ro report: ", empId);
+    // console.log("id ro report: ", empId);
 
     if (!empId) {
         return res.status(400).json({ error: "emp_id is required in request headers" });

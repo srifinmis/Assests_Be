@@ -85,13 +85,13 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
                     },
                 })),
             };
-        console.log('where : ', whereCondition);
+        // console.log('where : ', whereCondition);
 
         const existingUsers = await userlogins.findAll({
             where: whereCondition,
             raw: true
         });
-        console.log('existingUsers : ', existingUsers);
+        // console.log('existingUsers : ', existingUsers);
 
         // Dynamically map based on the flag
         const existingUnitIds = isBO
@@ -223,7 +223,7 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
         for (const row of filteredRecords) {
             const rowData = row.toJSON();
             rowData.debit_id = null; // Set debit_id to null as per your logic
-            console.log('assign to bo ----------: ', rowData)
+            // console.log('assign to bo ----------: ', rowData)
             await debit_card_details_workflow.create(rowData);
         }
 
@@ -402,7 +402,7 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
 // POST /bulk/upload-ro accept
 router.post('/acceptupload-ro', upload.single('file'), async (req, res) => {
     const { requested_by, accepted_by } = req.body;
-    console.log('bilk accept ro: ', req.body)
+    // console.log('bilk accept ro: ', req.body)
 
     try {
         const filePath = req.file.path;
