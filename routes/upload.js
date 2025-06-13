@@ -394,11 +394,7 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
 // POST /bulk/upload-ro accept
 router.post('/acceptupload-ro', upload.single('file'), async (req, res) => {
     const { requested_by, accepted_by } = req.body;
-<<<<<<< HEAD
-    // console.log('bilk accept ro: ', req.body)
-=======
     // console.log('bilk accept ro: ', req.body);
->>>>>>> e346f68a591e30ae0603822464f48082e4ab6198
 
     try {
         const filePath = req.file.path;
