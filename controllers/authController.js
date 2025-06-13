@@ -37,7 +37,7 @@ exports.login = async (req, res) => {
     const roleNames = rolesData.map(role => role.role_name);
 
     const designationcheck = user.designation_name;
-    console.log('designation : ', designationcheck);
+    // console.log('designation : ', designationcheck);
 
     const validBranchDesignations = ['Branch Manager', 'CSM', 'Sr CSM', 'Area Manager'];
     const validRegionDesignations = ['RO', 'BCM', 'Regional Credit Manager', 'Executive'];
@@ -52,7 +52,7 @@ exports.login = async (req, res) => {
             ? (user.regionid_name || user.branchid_name)
             : null;
     // user.emp_id;
-    console.log('assigned to : ', assignedTo)
+    // console.log('assigned to : ', assignedTo)
 
 
     // Fetch all modules for the role
@@ -69,7 +69,7 @@ exports.login = async (req, res) => {
     const modulesList = [...new Set(
       roleModules.map(rm => rm.module?.module_name).filter(Boolean)
     )];
-    console.log('Modules: ', modulesList)
+    // console.log('Modules: ', modulesList)
 
     // Fetch the states_assigned from userlogins table
     const statesAssigned = user.states_assigned || [];
