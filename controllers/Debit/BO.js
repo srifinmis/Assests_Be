@@ -33,7 +33,7 @@ router.get("/instakitIds", async (req, res) => {
 
 router.get("/boiddropdown", async (req, res) => {
     const requestedBy = req.headers["requested"];
-    console.log('requestedby : ', requestedBy)
+    // console.log('requestedby : ', requestedBy)
 
     try {
 
@@ -44,7 +44,7 @@ router.get("/boiddropdown", async (req, res) => {
             attributes: ['branchid_name'],
             raw: true
         });
-        console.log('branch : ', branches)
+        // console.log('branch : ', branches)
 
         res.json(branches);
     } catch (error) {
