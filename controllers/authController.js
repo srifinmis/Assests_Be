@@ -103,7 +103,7 @@ exports.login = async (req, res) => {
       },
       allowedModules: modulesList,
       branch: user.branchid_name,
-      statesAssigned: statesAssigned  // Include states_assigned in the response
+      statesAssigned: statesAssigned
     });
   } catch (error) {
     console.error("Login Error:", error);
