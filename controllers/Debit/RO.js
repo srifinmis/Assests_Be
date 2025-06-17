@@ -20,7 +20,7 @@ router.get("/ho-report", async (req, res) => {
     try {
         const results = await debit_card_details.findAll({
             where: { ho_by: empId },
-            attributes: ["docket_id", "ho_assigned_to", "ho_asigned_by", "ho_assigned_date", "ro_name", "bo_name", "status", "pod"]
+            // attributes: ["docket_id", "ho_assigned_to", "ho_asigned_by", "ho_assigned_date", "ro_name", "bo_name", "status", "pod"]
         });
 
         // const results = await debit_card_details.findAll({
