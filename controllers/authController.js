@@ -76,7 +76,7 @@ exports.login = async (req, res) => {
     // Generate the JWT token
     const token = jwt.sign(
       {
-        id: user.system_id,
+        id: user.emp_id,
         debit: assignedTo,
         Role: roleNames,
         modules: modulesList,

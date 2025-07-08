@@ -44,7 +44,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     emp_id: {
       type: DataTypes.STRING(255),
-      allowNull: true
+      allowNull: true,
+      unique: "emp_id_unique"
     },
     emp_name: {
       type: DataTypes.STRING(255),
@@ -88,6 +89,13 @@ module.exports = function(sequelize, DataTypes) {
     schema: 'public',
     timestamps: false,
     indexes: [
+      {
+        name: "emp_id_unique",
+        unique: true,
+        fields: [
+          { name: "emp_id" },
+        ]
+      },
       {
         name: "employee_master_pkey",
         unique: true,

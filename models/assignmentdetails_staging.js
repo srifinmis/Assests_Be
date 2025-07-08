@@ -7,14 +7,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    system_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'userlogins',
-        key: 'system_id'
-      }
-    },
     asset_id: {
       type: DataTypes.STRING(50),
       allowNull: true,
@@ -55,6 +47,14 @@ module.exports = function(sequelize, DataTypes) {
     bulk_id: {
       type: DataTypes.INTEGER,
       allowNull: true
+    },
+    emp_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      references: {
+        model: 'employee_master',
+        key: 'emp_id'
+      }
     }
   }, {
     sequelize,
