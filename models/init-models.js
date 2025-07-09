@@ -92,6 +92,8 @@ function initModels(sequelize) {
   assetmaster_staging.hasMany(bulk_assignmentdetails_staging, { as: "bulk_assignmentdetails_stagings", foreignKey: "asset_id"});
   approver_staging.belongsTo(assignmentdetails_staging, { as: "assignment", foreignKey: "assignment_id"});
   assignmentdetails_staging.hasMany(approver_staging, { as: "approver_stagings", foreignKey: "assignment_id"});
+  assetmaster_staging.belongsTo(bulk_upload_staging, { as: "bulk", foreignKey: "bulk_id"});
+  bulk_upload_staging.hasMany(assetmaster_staging, { as: "assetmaster_stagings", foreignKey: "bulk_id"});
   po_processing_staging.belongsTo(bulk_upload_staging, { as: "bulk", foreignKey: "bulk_id"});
   bulk_upload_staging.hasMany(po_processing_staging, { as: "po_processing_stagings", foreignKey: "bulk_id"});
   invoice_assignment_staging.belongsTo(po_processing_staging, { as: "po_num_po_processing_staging", foreignKey: "po_num"});
@@ -102,13 +104,10 @@ function initModels(sequelize) {
   po_processing_staging.hasMany(po_processing_assignment_staging, { as: "po_processing_assignment_stagings", foreignKey: "po_num"});
   po_products_staging.belongsTo(po_processing_staging, { as: "po_num_po_processing_staging", foreignKey: "po_num"});
   po_processing_staging.hasMany(po_products_staging, { as: "po_products_stagings", foreignKey: "po_num"});
-<<<<<<< HEAD
   assignmentdetails_staging.belongsTo(userlogins, { as: "system", foreignKey: "system_id"});
   userlogins.hasMany(assignmentdetails_staging, { as: "assignmentdetails_stagings", foreignKey: "system_id"});
   bulk_assignmentdetails_staging.belongsTo(userlogins, { as: "system", foreignKey: "system_id"});
   userlogins.hasMany(bulk_assignmentdetails_staging, { as: "bulk_assignmentdetails_stagings", foreignKey: "system_id"});
-=======
->>>>>>> f5038431975edc9258ce158491b133f9b478183c
 
   return {
     approver,

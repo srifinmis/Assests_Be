@@ -20,67 +20,23 @@ module.exports = function(sequelize, DataTypes) {
     },
     model: {
       type: DataTypes.STRING(100),
-      allowNull: true
+      allowNull: false
     },
     imei_num: {
       type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    mfr_serial_no: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    bt_number: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    bt_mac_address: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    firmware: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    sim_number: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    connection: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    network: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    sim_icicd: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    connection_number: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    network_type: {
-      type: DataTypes.STRING(50),
-      allowNull: true
+      allowNull: false
     },
     warranty_status: {
       type: DataTypes.STRING(50),
-      allowNull: true
+      allowNull: false
     },
     po_num: {
       type: DataTypes.STRING(50),
-      allowNull: true
+      allowNull: false
     },
     po_date: {
       type: DataTypes.DATEONLY,
-      allowNull: true
+      allowNull: false
     },
     base_location: {
       type: DataTypes.STRING(100),

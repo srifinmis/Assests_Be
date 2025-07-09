@@ -18,10 +18,6 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(255),
       allowNull: false
     },
-    mobile_number: {
-      type: DataTypes.STRING(20),
-      allowNull: false
-    },
     passwd_hash: {
       type: DataTypes.STRING(255),
       allowNull: true
@@ -59,14 +55,6 @@ module.exports = function(sequelize, DataTypes) {
     department_name: {
       type: DataTypes.STRING(50),
       allowNull: true
-    },
-    reporting_manager: {
-      type: DataTypes.STRING(255),
-      allowNull: false
-    },
-    hostname: {
-      type: DataTypes.STRING(100),
-      allowNull: false
     },
     branchid_name: {
       type: DataTypes.STRING(50),
