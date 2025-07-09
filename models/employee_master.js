@@ -44,8 +44,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     emp_id: {
       type: DataTypes.STRING(255),
-      allowNull: true,
-      unique: "emp_id_unique"
+      allowNull: true
     },
     emp_name: {
       type: DataTypes.STRING(255),
