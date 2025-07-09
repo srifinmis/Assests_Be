@@ -7,13 +7,9 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    system_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'userlogins',
-        key: 'system_id'
-      }
+    emp_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
     asset_id: {
       type: DataTypes.STRING(50),

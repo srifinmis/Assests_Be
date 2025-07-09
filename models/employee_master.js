@@ -3,12 +3,33 @@ module.exports = function(sequelize, DataTypes) {
   return sequelize.define('employee_master', {
     system_id: {
       type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    emp_id: {
+      type: DataTypes.STRING(255),
       allowNull: false,
-      primaryKey: true
+      primaryKey: true,
+      unique: "emp_id_unique"
+    },
+    emp_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    passwd_hash: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
     email: {
       type: DataTypes.STRING(255),
       allowNull: false
+    },
+    emp_mob: {
+      type: DataTypes.STRING(15),
+      allowNull: true
+    },
+    host_name: {
+      type: DataTypes.STRING(100),
+      allowNull: true
     },
     designation_name: {
       type: DataTypes.STRING(50),
@@ -16,6 +37,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     department_name: {
       type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    reporting_manager: {
+      type: DataTypes.STRING(255),
       allowNull: true
     },
     branchid_name: {
@@ -40,18 +65,6 @@ module.exports = function(sequelize, DataTypes) {
     },
     access_status: {
       type: DataTypes.STRING(30),
-      allowNull: true
-    },
-    emp_id: {
-      type: DataTypes.STRING(255),
-      allowNull: true
-    },
-    emp_name: {
-      type: DataTypes.STRING(255),
-      allowNull: true
-    },
-    passwd_hash: {
-      type: DataTypes.STRING(255),
       allowNull: true
     },
     created_at: {
@@ -89,10 +102,17 @@ module.exports = function(sequelize, DataTypes) {
     timestamps: false,
     indexes: [
       {
+        name: "emp_id_unique",
+        unique: true,
+        fields: [
+          { name: "emp_id" },
+        ]
+      },
+      {
         name: "employee_master_pkey",
         unique: true,
         fields: [
-          { name: "system_id" },
+          { name: "emp_id" },
         ]
       },
     ]
