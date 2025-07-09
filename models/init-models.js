@@ -72,6 +72,8 @@ function initModels(sequelize) {
   assetmaster.hasMany(assignmentdetails, { as: "assignmentdetails", foreignKey: "asset_id"});
   approver.belongsTo(assignmentdetails, { as: "assignment", foreignKey: "assignment_id"});
   assignmentdetails.hasMany(approver, { as: "approvers", foreignKey: "assignment_id"});
+  assignmentdetails.belongsTo(employee_master, { as: "emp", foreignKey: "emp_id"});
+  employee_master.hasMany(assignmentdetails, { as: "assignmentdetails", foreignKey: "emp_id"});
   roles_modules.belongsTo(modules, { as: "module", foreignKey: "module_id"});
   modules.hasMany(roles_modules, { as: "roles_modules", foreignKey: "module_id"});
   po_processing_assignment.belongsTo(po_processing, { as: "po_num_po_processing", foreignKey: "po_num"});
@@ -92,6 +94,8 @@ function initModels(sequelize) {
   assignmentdetails_staging.hasMany(approver_staging, { as: "approver_stagings", foreignKey: "assignment_id"});
   po_processing_staging.belongsTo(bulk_upload_staging, { as: "bulk", foreignKey: "bulk_id"});
   bulk_upload_staging.hasMany(po_processing_staging, { as: "po_processing_stagings", foreignKey: "bulk_id"});
+  assignmentdetails_staging.belongsTo(employee_master, { as: "emp", foreignKey: "emp_id"});
+  employee_master.hasMany(assignmentdetails_staging, { as: "assignmentdetails_stagings", foreignKey: "emp_id"});
   invoice_assignment_staging.belongsTo(po_processing_staging, { as: "po_num_po_processing_staging", foreignKey: "po_num"});
   po_processing_staging.hasMany(invoice_assignment_staging, { as: "invoice_assignment_stagings", foreignKey: "po_num"});
   payment_assignment_staging.belongsTo(po_processing_staging, { as: "po_num_po_processing_staging", foreignKey: "po_num"});

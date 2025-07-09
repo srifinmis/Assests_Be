@@ -9,7 +9,11 @@ module.exports = function(sequelize, DataTypes) {
     },
     emp_id: {
       type: DataTypes.STRING(255),
-      allowNull: true
+      allowNull: true,
+      references: {
+        model: 'employee_master',
+        key: 'emp_id'
+      }
     },
     asset_id: {
       type: DataTypes.STRING(20),
@@ -42,6 +46,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     remarks: {
       type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    assigned_to: {
+      type: DataTypes.STRING(200),
       allowNull: true
     }
   }, {

@@ -16,9 +16,84 @@ const {
 } = models;
 
 // API to fetch pending asset assignments with Free-Assign type
+// router.get("/free-assign-assets", async (req, res) => {
+//   try {
+//     // Find all pending approval requests
+//     const pendingApprovals = await approver_staging.findAll({
+//       where: { approval_status: "Pending" },
+//       attributes: ["request_num", "assignment_id"],
+//     });
+
+//     if (!pendingApprovals.length) {
+//       return res.json({ message: "No pending approvals found." });
+//     }
+
+//     // Extract assignment IDs
+//     const assignmentIds = pendingApprovals.map((a) => a.assignment_id);
+
+//     // Fetch assignment details where assigned_type is "Free-Assign" and status is "In Progress"
+//     const assignments = await assignmentdetails_staging.findAll({
+//       where: {
+//         assignment_id: assignmentIds,
+//         assigned_type: "Free-Assign",
+//         assignment_status: "In Progress",
+//       },
+//       attributes: ["assignment_id", "asset_id", "assignment_status"],
+//       include: [
+//         {
+//           model: assetmaster,
+//           as: "asset",
+//           attributes: ["asset_type", "brand", "model", "imei_num"], // Fetch asset details
+//         },
+//         {
+//           model: employee_master,
+//           as: "emp",
+//           attributes: [
+//             "emp_id",
+//             "emp_name",
+//             "designation_name",
+//             "department_name",
+//             "branchid_name",
+//             "areaid_name",
+//             "regionid_name",
+//             "clusterid_name",
+//             "state",
+//           ],
+//           required: false,
+//           on: Sequelize.literal(
+//             `CAST("assignmentdetails_staging"."emp_id" AS TEXT) = "emp"."emp_id"`
+//           )
+//         },
+//       ],
+//     });
+
+//     if (!assignments.length) {
+//       return res.json({ message: "No matching assignments found for pending approvals." });
+//     }
+
+//     // Map results to match the required response format
+//     const results = assignments.map((assign) => {
+//       const approval = pendingApprovals.find((a) => a.assignment_id === assign.assignment_id);
+//       return {
+//         request_num: approval.request_num,
+//         asset_id: assign.asset_id,
+//         asset_type: assign.asset?.asset_type, // Include asset_type
+//         asset_name: `${assign.asset?.brand} - ${assign.asset?.model}`, // Construct Asset Name
+//         imei_num: assign.asset?.imei_num,
+//         system: assign.system, // Ensure assigned_to details are inside 'system'
+//         assignment_status: assign.assignment_status,
+//       };
+//     });
+
+//     res.json(results);
+//   } catch (error) {
+//     console.error("Error fetching pending assignments:", error);
+//     res.status(500).json({ error: "An error occurred while retrieving data." });
+//   }
+// });
+
 router.get("/free-assign-assets", async (req, res) => {
   try {
-    // Find all pending approval requests
     const pendingApprovals = await approver_staging.findAll({
       where: { approval_status: "Pending" },
       attributes: ["request_num", "assignment_id"],
@@ -28,10 +103,8 @@ router.get("/free-assign-assets", async (req, res) => {
       return res.json({ message: "No pending approvals found." });
     }
 
-    // Extract assignment IDs
     const assignmentIds = pendingApprovals.map((a) => a.assignment_id);
 
-    // Fetch assignment details where assigned_type is "Free-Assign" and status is "In Progress"
     const assignments = await assignmentdetails_staging.findAll({
       where: {
         assignment_id: assignmentIds,
@@ -43,7 +116,7 @@ router.get("/free-assign-assets", async (req, res) => {
         {
           model: assetmaster,
           as: "asset",
-          attributes: ["asset_type", "brand", "model", "imei_num"], // Fetch asset details
+          attributes: ["asset_type", "brand", "model", "imei_num"],
         },
         {
           model: employee_master,
@@ -57,12 +130,9 @@ router.get("/free-assign-assets", async (req, res) => {
             "areaid_name",
             "regionid_name",
             "clusterid_name",
-            "state",
+            "state"
           ],
           required: false,
-          on: Sequelize.literal(
-            `CAST("assignmentdetails_staging"."emp_id" AS TEXT) = "emp"."emp_id"`
-          )
         },
       ],
     });
@@ -71,17 +141,24 @@ router.get("/free-assign-assets", async (req, res) => {
       return res.json({ message: "No matching assignments found for pending approvals." });
     }
 
-    // Map results to match the required response format
     const results = assignments.map((assign) => {
       const approval = pendingApprovals.find((a) => a.assignment_id === assign.assignment_id);
       return {
         request_num: approval.request_num,
         asset_id: assign.asset_id,
-        asset_type: assign.asset?.asset_type, // Include asset_type
-        asset_name: `${assign.asset?.brand} - ${assign.asset?.model}`, // Construct Asset Name
+        asset_type: assign.asset?.asset_type,
+        asset_name: `${assign.asset?.brand} - ${assign.asset?.model}`,
         imei_num: assign.asset?.imei_num,
-        system: assign.system, // Ensure assigned_to details are inside 'system'
-        assignment_status: assign.assignment_status,
+        emp_id: assign.emp?.emp_id,
+        emp_name: assign.emp?.emp_name,
+        designation_name: assign.emp?.designation_name,
+        department_name: assign.emp?.department_name,
+        branchid_name: assign.emp?.branchid_name,
+        areaid_name: assign.emp?.areaid_name,
+        regionid_name: assign.emp?.regionid_name,
+        clusterid_name: assign.emp?.clusterid_name,
+        state: assign.emp?.state,
+        assignment_status: assign.assignment_status
       };
     });
 

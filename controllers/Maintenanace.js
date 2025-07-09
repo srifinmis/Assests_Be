@@ -9,9 +9,9 @@ const sendEmail = require("../utils/sendEmail");
 router.post("/maintenance", async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-        const { asset_id, requested_by } = req.body;
+        const { asset_id, requested_by, assigned_to } = req.body;
 
-        if (!asset_id || !requested_by) {
+        if (!asset_id || !requested_by || !assigned_to) {
             await transaction.rollback();
             return res.status(400).json({ error: "Missing required fields." });
         }
@@ -45,7 +45,7 @@ router.post("/maintenance", async (req, res) => {
         // Create a record in assignmentdetails_staging
         const asset = await assignmentdetails_staging.create({
             asset_id,
-            assigned_to: null, // No assignee for maintenance
+            assigned_to: assigned_to, // No assignee for maintenance
             assigned_type: "Free-Under",
             assignment_status: "In Progress",
             assigned_date: new Date(), // ✅ Set assigned_date explicitly

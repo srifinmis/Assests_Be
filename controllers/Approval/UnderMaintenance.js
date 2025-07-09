@@ -38,7 +38,7 @@ router.get("/free-under-assets", async (req, res) => {
         assigned_type: "Free-Under",
         assignment_status: "In Progress",
       },
-      attributes: ["assignment_id", "asset_id", "assignment_status"],
+      attributes: ["assignment_id", "asset_id", "assignment_status", "assigned_to"],
       include: [
         {
           model: assetmaster,
@@ -80,11 +80,12 @@ router.get("/free-under-assets", async (req, res) => {
         asset_type: assign.asset?.asset_type, // Include asset_type
         asset_name: `${assign.asset?.brand} - ${assign.asset?.model}`, // Construct Asset Name
         imei_num: assign.asset?.imei_num,
-        system: assign.system, // Ensure assigned_to details are inside 'system'
+        assigned_to: assign.assigned_to,
+        // system: assign.system, // Ensure assigned_to details are inside 'system'
         assignment_status: assign.assignment_status,
       };
     });
-
+console.log("results",results);
     res.json(results);
   } catch (error) {
     console.error("Error fetching pending assignments:", error);
