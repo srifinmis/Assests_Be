@@ -6,12 +6,12 @@ const { sequelize } = require("../config/db");
 const initModels = require("../models/init-models");
 
 const models = initModels(sequelize);
-const { assignmentdetails, assignmentdetails_staging, assetmaster, userlogins } = models;
+const { assignmentdetails, assignmentdetails_staging, assetmaster, employee_master } = models;
 
 router.get("/details/:category/:type", async (req, res) => {
   try {
     const { category, type } = req.params;
-    
+
     // Condition to match asset type
     let whereCondition = sequelize.where(
       sequelize.fn("LOWER", sequelize.col("asset_type")),
@@ -31,7 +31,7 @@ router.get("/details/:category/:type", async (req, res) => {
       assignmentWhere.assignment_status = "Free Pool";
       stagingWhere.assigned_type = { [Op.in]: ["Free-Under", "Free-Assign"] };
     }
-    else{
+    else {
       assignmentWhere.assignment_status = { [Op.in]: ["Assigned", "Under Maintenance", "Free Pool"] };
       stagingWhere.assigned_type = { [Op.in]: ["Assign-Free", "Under-Free", "Free-Under", "Free-Assign"] };
     }
@@ -65,9 +65,13 @@ router.get("/details/:category/:type", async (req, res) => {
             where: whereCondition, // Filter by type
           },
           {
-            model: userlogins,
-            as: "system",
+            model: employee_master,
+            as: "emp",
             attributes: ["emp_id", "emp_name", "designation_name", "department_name", "branchid_name", "areaid_name", "regionid_name", "clusterid_name", "state"],
+            required: false,
+            on: Sequelize.literal(
+              `CAST("assignmentdetails"."emp_id" AS TEXT) = CAST("emp"."emp_id" AS TEXT)`
+            ),
           },
         ],
         where: {
@@ -90,9 +94,13 @@ router.get("/details/:category/:type", async (req, res) => {
             where: whereCondition, // Filter by type
           },
           {
-            model: userlogins,
-            as: "system",
+            model: employee_master,
+            as: "emp",
             attributes: ["emp_id", "emp_name", "designation_name", "department_name", "branchid_name", "areaid_name", "regionid_name", "clusterid_name", "state"],
+            required: false,
+            on: Sequelize.literal(
+              `CAST("assignmentdetails_staging"."emp_id" AS TEXT) = CAST("emp"."emp_id" AS TEXT)`
+            ),
           },
         ],
         where: stagingWhere,
@@ -102,24 +110,24 @@ router.get("/details/:category/:type", async (req, res) => {
     }
 
     let unassignedAssets = [];
-if (category === "free-pool" || category === "total-assets") {
-  unassignedAssets = await assetmaster.findAll({
-    attributes: ["asset_id", "brand", "model", "imei_num"],
-    where: {
-      asset_id: {
-        [Op.notIn]: Sequelize.literal(`(
+    if (category === "free-pool" || category === "total-assets") {
+      unassignedAssets = await assetmaster.findAll({
+        attributes: ["asset_id", "brand", "model", "imei_num"],
+        where: {
+          asset_id: {
+            [Op.notIn]: Sequelize.literal(`(
           SELECT asset_id FROM assignmentdetails
         )`),
-        [Op.notIn]: Sequelize.literal(`(
+            [Op.notIn]: Sequelize.literal(`(
           SELECT asset_id FROM staging.assignmentdetails_staging 
           WHERE assignment_status != 'Rejected'
         )`),
-      },
-      asset_type: { [Op.iLike]: type.trim() },
-    },
-    raw: true,
-  });
-}
+          },
+          asset_type: { [Op.iLike]: type.trim() },
+        },
+        raw: true,
+      });
+    }
 
 
     // Format Assigned & In-Progress Assets
@@ -131,16 +139,16 @@ if (category === "free-pool" || category === "total-assets") {
       assignment_status: asset.assignment_status || asset.assigned_type || "Free Pool",
       assigned_to: asset.system
         ? {
-            emp_id: asset.system.emp_id || "N/A",
-            emp_name: asset.system.emp_name || "N/A",
-            designation_name: asset.system.designation_name || "N/A",
-            department_name: asset.system.department_name || "N/A",
-            branchid_name: asset.system?.branchid_name || "N/A",
-            areaid_name: asset.system?.areaid_name || "N/A",
-            regionid_name: asset.system?.regionid_name || "N/A",
-            clusterid_name: asset.system?.clusterid_name || "N/A",
-            state: asset.system?.state || "N/A",
-          }
+          emp_id: asset.system.emp_id || "N/A",
+          emp_name: asset.system.emp_name || "N/A",
+          designation_name: asset.system.designation_name || "N/A",
+          department_name: asset.system.department_name || "N/A",
+          branchid_name: asset.system?.branchid_name || "N/A",
+          areaid_name: asset.system?.areaid_name || "N/A",
+          regionid_name: asset.system?.regionid_name || "N/A",
+          clusterid_name: asset.system?.clusterid_name || "N/A",
+          state: asset.system?.state || "N/A",
+        }
         : {},
     }));
 

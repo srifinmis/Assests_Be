@@ -11,12 +11,12 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    system_id: {
+    emp_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
         model: 'userlogins',
-        key: 'system_id'
+        key: 'emp_id'
       }
     },
     assigned_at: {

@@ -1,5 +1,6 @@
 //routes/authRoutes.js
 const express = require("express");
+const cors = require('cors');
 // const upload = require("../middleware/upload");
 // const multer = require("multer"); // ✅ Import multer
 

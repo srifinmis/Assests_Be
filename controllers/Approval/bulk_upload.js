@@ -33,20 +33,20 @@ router.get("/uploads", async (req, res) => {
           po_processing_staging.findAll({ where: { bulk_id } }),
         ]);
         
-        const systemIds = rawAssignments.map(a => a.system_id).filter(Boolean);
+        const systemIds = rawAssignments.map(a => a.emp_id).filter(Boolean);
         
         const userDetails = await models.userlogins.findAll({
-          where: { system_id: systemIds },
-          attributes: ["system_id", "emp_id", "emp_name", "email", "designation_name", "department_name"],
+          where: { emp_id: systemIds },
+          attributes: ["emp_id", "emp_id", "emp_name", "email", "designation_name", "department_name"],
         });
         
         const userMap = userDetails.reduce((map, user) => {
-          map[user.system_id] = user;
+          map[user.emp_id] = user;
           return map;
         }, {});
         
         const assignments = rawAssignments.map(assignment => {
-          const user = userMap[assignment.system_id] || {};
+          const user = userMap[assignment.emp_id] || {};
           return {
             ...assignment.dataValues,
             emp_id: user.emp_id || null,
@@ -94,23 +94,23 @@ router.get("/uploads/:bulkId", async (req, res) => {
       po_processing_staging.findAll({ where: { bulk_id: bulkId } }),
     ]);
 
-    // Fetch employee details based on system_ids from rawAssignments
-    const systemIds = rawAssignments.map(a => a.system_id).filter(Boolean);
+    // Fetch employee details based on emp_ids from rawAssignments
+    const systemIds = rawAssignments.map(a => a.emp_id).filter(Boolean);
 
     const userDetails = await models.userlogins.findAll({
-      where: { system_id: systemIds },
-      attributes: ["system_id", "emp_id", "emp_name", "email", "designation_name", "department_name"],
+      where: { emp_id: systemIds },
+      attributes: ["emp_id", "emp_id", "emp_name", "email", "designation_name", "department_name"],
     });
 
-    // Create a map of system_id to employee details
+    // Create a map of emp_id to employee details
     const userMap = userDetails.reduce((map, user) => {
-      map[user.system_id] = user;
+      map[user.emp_id] = user;
       return map;
     }, {});
 
     // Attach employee details to each assignment
     const assignments = rawAssignments.map(assignment => {
-      const user = userMap[assignment.system_id] || {};
+      const user = userMap[assignment.emp_id] || {};
       return {
         ...assignment.dataValues,
         emp_id: user.emp_id || null,

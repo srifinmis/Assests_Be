@@ -39,10 +39,9 @@ exports.login = async (req, res) => {
 
     const designationcheck = user.designation_name;
     // console.log('designation : ', designationcheck);
-
-    const validBranchDesignations = ['Branch Manager', 'CSM', 'Sr CSM', 'Area Manager'];
-    const validRegionDesignations = ['RO', 'BCM', 'Regional Credit Manager', 'Executive'];
-    const validHODesignations = ['HO', 'Head Office', 'Principal Manager', 'Assistant Manager', 'Lead Manager'];
+    const validHODesignations = ['HO', 'Head Office', 'Vice President', 'Assistant Vice President', 'Associate', 'Principal Manager', 'Assistant Manager', 'Lead Manager'];
+    const validRegionDesignations = ['RO', 'BCM', 'Regional Credit Manager', 'Manager', 'Executive', 'Regional Manager'];
+    const validBranchDesignations = ['Branch Manager', 'CSM', 'Sr CSM', 'Area Manager', 'Assistant Branch Manager'];
 
     const assignedTo =
       validBranchDesignations.includes(designationcheck)
@@ -54,7 +53,6 @@ exports.login = async (req, res) => {
             : null;
     // user.emp_id;
     // console.log('assigned to : ', assignedTo)
-
 
     // Fetch all modules for the role
     const roleModules = await roles_modules.findAll({
@@ -78,7 +76,7 @@ exports.login = async (req, res) => {
     // Generate the JWT token
     const token = jwt.sign(
       {
-        id: user.system_id,
+        id: user.emp_id,
         debit: assignedTo,
         Role: roleNames,
         modules: modulesList,

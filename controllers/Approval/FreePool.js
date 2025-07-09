@@ -4,12 +4,12 @@ const { sequelize } = require("../../config/db");
 const initModels = require("../../models/init-models");
 const models = initModels(sequelize);
 const sendEmail = require("../../utils/sendEmail");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 
 const {
   assignmentdetails_staging,
   assetmaster,
-  userlogins,
+  employee_master,
   approver_staging,
   assignmentdetails,
 } = models;
@@ -45,9 +45,13 @@ router.get("/free-assets", async (req, res) => {
           attributes: ["asset_type", "brand", "model", "imei_num"],
         },
         {
-          model: userlogins,
-          as: "system",
+          model: employee_master,
+          as: "emp",
           attributes: ["emp_id", "emp_name", "designation_name", "department_name"],
+          required: false,
+          on: Sequelize.literal(
+            `CAST("assignmentdetails_staging"."emp_id" AS TEXT) = "emp"."emp_id"`
+          )
         },
       ],
     });
@@ -112,7 +116,7 @@ router.post('/action', async (req, res) => {
 
       const assignmentId = approverRecord.assignment_id;
 
-      const approverUser = await models.userlogins.findOne({
+      const approverUser = await models.employee_master.findOne({
         where: { emp_id: approved_by },
         attributes: ["emp_id", "emp_name", "email"],
         transaction,
@@ -124,7 +128,7 @@ router.post('/action', async (req, res) => {
       }
 
       // Fetch the requested_by user
-      const requestedByUser = await models.userlogins.findOne({
+      const requestedByUser = await models.employee_master.findOne({
         where: { emp_id: approverRecord.requested_by },
         attributes: ["emp_id", "emp_name", "email"],
         transaction,
@@ -180,7 +184,7 @@ router.post('/action', async (req, res) => {
           await assignmentdetails.update(
             {
               assignment_id: assignmentId, // ✅ New ID from staging
-              system_id: assignmentRow.system_id,
+              emp_id: assignmentRow.emp_id,
               assigned_date: assignmentRow.assigned_date,
               assignment_status: assignmentStatus, // Usually 'Assigned'
               branchid_name: assignmentRow.branchid_name,
@@ -191,13 +195,13 @@ router.post('/action', async (req, res) => {
             {
               where: { asset_id: assignmentRow.asset_id },
               transaction,
-          });
+            });
         } else {
           // If asset_id doesn't exist, create a new record
           await assignmentdetails.create({
             assignment_id: assignmentRow.assignment_id,
             asset_id: assignmentRow.asset_id,
-            system_id: assignmentRow.system_id,
+            emp_id: assignmentRow.emp_id,
             assigned_date: assignmentRow.assigned_date,
             assignment_status: 'Free Pool',
             branchid_name: assignmentRow.branchid_name,

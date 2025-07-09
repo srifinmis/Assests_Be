@@ -110,13 +110,13 @@
 //         const user = await userlogins.findOne({ where: { emp_id } });
 //         if (!user) continue;
 
-//         const { system_id, branch_id, region_id } = user;
+//         const { emp_id, branch_id, region_id } = user;
 
 //         await bulk_assignmentdetails_staging.create(
 //           {
 //             asset_id: asset.asset_id,
 //             emp_id,
-//             system_id,
+//             emp_id,
 //             Location: branch_id,
 //             State: region_id, 
 //             assignment_status,
@@ -265,13 +265,13 @@ router.post("/upload", upload.single("file"), async (req, res) => {
           const user = await userlogins.findOne({ where: { emp_id } });
           if (!user) continue;
 
-          const { system_id, branch_id, region_id } = user;
+          const {  branch_id, region_id } = user;
 
           await bulk_assignmentdetails_staging.create(
             {
               asset_id: asset.asset_id,
               emp_id,
-              system_id,
+              emp_id,
               Location: branch_id,
               State: region_id,
               assignment_status,
