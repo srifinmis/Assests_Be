@@ -132,25 +132,26 @@ router.get("/details/:category/:type", async (req, res) => {
 
     // Format Assigned & In-Progress Assets
     const formattedAssets = [...assignedAssets, ...inProgressAssets].map((asset) => ({
-      asset_id: asset.asset_id,
-      brand: asset.asset?.brand || "Unknown",
-      model: asset.asset?.model || "Unknown",
-      imei_num: asset.asset?.imei_num || "Unknown",
-      assignment_status: asset.assignment_status || asset.assigned_type || "Free Pool",
-      assigned_to: asset.system
-        ? {
-          emp_id: asset.system.emp_id || "N/A",
-          emp_name: asset.system.emp_name || "N/A",
-          designation_name: asset.system.designation_name || "N/A",
-          department_name: asset.system.department_name || "N/A",
-          branchid_name: asset.system?.branchid_name || "N/A",
-          areaid_name: asset.system?.areaid_name || "N/A",
-          regionid_name: asset.system?.regionid_name || "N/A",
-          clusterid_name: asset.system?.clusterid_name || "N/A",
-          state: asset.system?.state || "N/A",
-        }
-        : {},
+  asset_id: asset.asset_id,
+  brand: asset.asset?.brand || "Unknown",
+  model: asset.asset?.model || "Unknown",
+  imei_num: asset.asset?.imei_num || "Unknown",
+  assignment_status: asset.assignment_status || asset.assigned_type || "Free Pool",
+  assigned_to: asset.emp  // check for the presence of the joined employee object
+    ? {
+        emp_id: asset.emp.emp_id || "N/A",
+        emp_name: asset.emp.emp_name || "N/A",
+        designation_name: asset.emp.designation_name || "N/A",
+        department_name: asset.emp.department_name || "N/A",
+        branchid_name: asset.emp.branchid_name || "N/A",
+        areaid_name: asset.emp.areaid_name || "N/A",
+        regionid_name: asset.emp.regionid_name || "N/A",
+        clusterid_name: asset.emp.clusterid_name || "N/A",
+        state: asset.emp.state || "N/A",
+      }
+    : {},
     }));
+
 
     // Format Free Pool & Unassigned Assets
     const freePoolFormatted = [...freePoolAssets, ...unassignedAssets].map((asset) => ({

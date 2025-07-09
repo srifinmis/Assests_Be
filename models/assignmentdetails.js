@@ -7,12 +7,21 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
+<<<<<<< HEAD
     system_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
         model: 'userlogins',
         key: 'system_id'
+=======
+    emp_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      references: {
+        model: 'employee_master',
+        key: 'emp_id'
+>>>>>>> f5038431975edc9258ce158491b133f9b478183c
       }
     },
     asset_id: {
@@ -47,6 +56,13 @@ module.exports = function(sequelize, DataTypes) {
     remarks: {
       type: DataTypes.STRING(500),
       allowNull: true
+<<<<<<< HEAD
+=======
+    },
+    assigned_to: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+>>>>>>> f5038431975edc9258ce158491b133f9b478183c
     }
   }, {
     sequelize,

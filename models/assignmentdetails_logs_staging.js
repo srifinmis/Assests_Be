@@ -11,8 +11,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: true
     },
-    system_id: {
-      type: DataTypes.INTEGER,
+    emp_id: {
+      type: DataTypes.STRING(255),
       allowNull: true
     },
     asset_id: {
