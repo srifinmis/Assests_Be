@@ -15,7 +15,7 @@ exports.login = async (req, res) => {
       return res.status(500).json({ message: "Model userlogins not found" });
     }
 
-    const user = await userlogins.findOne({ where: { emp_id } });
+    const user = await userlogins.findOne({ where: { emp_id: emp_id.toUpperCase() } });
     if (!user) return res.status(400).json({ message: "User not found" });
 
     if (user.emp_status !== "ACCEPTED" || user.access_status !== "GRANTED")
