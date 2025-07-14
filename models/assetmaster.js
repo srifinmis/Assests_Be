@@ -26,28 +26,76 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(50),
       allowNull: false
     },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    mfr_serial_no: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    bt_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    bt_mac_address: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    firmware: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    sim_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    connection: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    network: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    sim_icicd: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    connection_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    network_type: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
     warranty_status: {
-      type: DataTypes.STRING(50),
-      allowNull: false
+      type: DataTypes.STRING(100),
+      allowNull: true
     },
     po_num: {
-      type: DataTypes.STRING(50),
-      allowNull: false
+      type: DataTypes.STRING(100),
+      allowNull: true
     },
     po_date: {
-      type: DataTypes.DATEONLY,
-      allowNull: false
+      type: DataTypes.STRING(100),
+      allowNull: true
     },
     base_location: {
       type: DataTypes.STRING(100),
-      allowNull: false
+      allowNull: true
     },
     state: {
       type: DataTypes.STRING(100),
-      allowNull: false
+      allowNull: true
     },
     remarks: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    asset_purchased_from: {
+      type: DataTypes.STRING(100),
       allowNull: true
     }
   }, {

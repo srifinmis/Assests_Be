@@ -7,12 +7,12 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    system_id: {
-      type: DataTypes.INTEGER,
+    emp_id: {
+      type: DataTypes.STRING(255),
       allowNull: true,
       references: {
-        model: 'userlogins',
-        key: 'system_id'
+        model: 'employee_master',
+        key: 'emp_id'
       }
     },
     asset_id: {
@@ -46,6 +46,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     remarks: {
       type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    assigned_to: {
+      type: DataTypes.STRING(200),
       allowNull: true
     }
   }, {
