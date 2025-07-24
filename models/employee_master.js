@@ -6,42 +6,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    email: {
-      type: DataTypes.STRING(255),
-      allowNull: false
-    },
-    designation_name: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    department_name: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    branchid_name: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    areaid_name: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    regionid_name: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    clusterid_name: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    state: {
-      type: DataTypes.STRING(50),
-      allowNull: true
-    },
-    access_status: {
-      type: DataTypes.STRING(30),
-      allowNull: true
-    },
     emp_id: {
       type: DataTypes.STRING(255),
       allowNull: true
@@ -52,6 +16,54 @@ module.exports = function(sequelize, DataTypes) {
     },
     passwd_hash: {
       type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    email: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    emp_mob: {
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    host_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    designation_name: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    department_name: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    reporting_manager: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    branchid_name: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    areaid_name: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    regionid_name: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    clusterid_name: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    state: {
+      type: DataTypes.STRING(200),
+      allowNull: true
+    },
+    access_status: {
+      type: DataTypes.STRING(100),
       allowNull: true
     },
     created_at: {
@@ -71,11 +83,11 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true
     },
     emp_status: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(50),
       allowNull: true
     },
     role_ids_assigned: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(100),
       allowNull: true
     },
     states_assigned: {

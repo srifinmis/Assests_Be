@@ -83,6 +83,10 @@ module.exports = function(sequelize, DataTypes) {
     states_assigned: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    emp_mobile: {
+      type: DataTypes.STRING(100),
+      allowNull: true
     }
   }, {
     sequelize,
