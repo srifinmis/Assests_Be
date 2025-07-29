@@ -16,11 +16,11 @@ app.use(bodyParser.json());
 
 // 29 op
 const pool = new Pool({
-  user: 'jarvis',
-  host: '192.168.80.38',
-  database: 'it_assetmanagement_final',
-  password: '2650',
-  port: 5555,
+  user: 'easyerp_ams',
+  host: 'postgresql',
+  database: 'ams_prod_db',
+  password: 'securepassword',
+  port: 5432,
 });
 
 // Serve static files from utils/uploads directory
