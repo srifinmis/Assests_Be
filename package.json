@@ -8,5 +8,25 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.855.0",
+    "@aws-sdk/s3-request-presigner": "^3.855.0",
+    "aws-sdk": "^2.1692.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "fs-extra": "^11.3.0",
+    "handlebars": "^4.7.8",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.5",
+    "num-words": "^1.2.3",
+    "pg": "^8.16.3",
+    "puppeteer": "^24.15.0",
+    "sequelize": "^6.37.7",
+    "xlsx": "^0.18.5"
+  }
 }
