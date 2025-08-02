@@ -39,11 +39,11 @@ app.get('/api/fetch/table', async (req, res) => {
     res.status(500).json({ error: 'Database query failed' });
   }
 });
-
-const PORT = process.env.PORT || 2727; 
+const PORT = process.env.PORT || 2727;
 
 sequelize.sync().then(() => {
   console.log("✅ Database synchronized!");
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-});
+  // app.listen(PORT, () => console.log(🚀 Server running on port ${PORT}));
+  app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
 
+});
