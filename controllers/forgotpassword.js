@@ -25,7 +25,7 @@ router.post("/password", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "5m" }
     );
-    const resetLink = `http://192.168.80.38:3333/ResetPassword?token=${token}`;
+    const resetLink = `https://ams.srifincredit.com/ResetPassword?token=${token}`;
 
     const html = `
       <h3>Password Reset Request</h3>

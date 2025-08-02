@@ -92,9 +92,9 @@ exports.login = async (req, res) => {
       token,
       user: {
         emp_id: user.emp_id,
-        emp_id2: assignedTo,
+        emp_id_second: assignedTo,
         // emp_id: assignedTo,
-        // emp_id2: user.emp_id,
+        // emp_id_second: user.emp_id,
         debitusers: assignedTo,
         name: user.emp_name,
         role: user.designation_name,

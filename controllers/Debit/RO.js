@@ -10,7 +10,7 @@ const { debit_card_details, userlogins } = models;
 
 //ho code:::
 router.get("/ho-report", async (req, res) => {
-    const empId = req.headers["emp_id2"];
+    const empId = req.headers["emp_id_second"];
     // console.log("id ho: ", empId);
 
     if (!empId) {
@@ -36,7 +36,7 @@ router.get("/ho-report", async (req, res) => {
 });
 
 router.get("/ro-report", async (req, res) => {
-    const emp = req.headers["emp_id2"];
+    const emp = req.headers["emp_id_second"];
     const empId = emp.split('-')[0];
     // console.log("id ro report: ", empId);
 
@@ -128,7 +128,7 @@ router.get("/details", async (req, res) => {
 
 
 router.get("/detailslog", async (req, res) => {
-    const emp = req.headers["emp_id2"];
+    const emp = req.headers["emp_id_second"];
     const empId = emp.split('-')[0];
     // console.log("details pending ro acceptance: ", empId)
 
@@ -292,7 +292,7 @@ router.post("/unassign", async (req, res) => {
 
 
 router.get("/rodetailsassign", async (req, res) => {
-    const emp = req.headers["emp_id2"];
+    const emp = req.headers["emp_id_second"];
     const empId = emp.split('-')[0];
     // console.log("details : ", empId)
 
