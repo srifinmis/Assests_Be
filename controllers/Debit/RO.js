@@ -10,31 +10,27 @@ const { debit_card_details, userlogins } = models;
 
 //ho code:::
 router.get("/ho-report", async (req, res) => {
-    console.log("📩 Incoming headers:", req.headers); // 🔍 Add this line
-    const empId = req.headers["emp_id_second"];
-    // console.log("id ho: ", empId);
+    console.log("📩 Incoming query params:", req.query);
+
+    const empId = req.query.emp_id_second;
 
     if (!empId) {
-        return res.status(400).json({ error: "emp_id_second is required in request headers" });
+        return res.status(400).json({ error: "emp_id_second is required as a query parameter" });
     }
 
     try {
         const results = await debit_card_details.findAll({
-            where: { ho_by: empId },
-            // attributes: ["docket_id", "ho_assigned_to", "ho_asigned_by", "ho_assigned_date", "ro_name", "bo_name", "status", "pod"]
+            where: { ho_by: empId }
         });
 
-        // const results = await debit_card_details.findAll({
-        //     where: { ho_by: empId }
-        // });
-
-        console.log('report: ', results);
+        console.log('📊 Report results:', results);
         res.json(results);
     } catch (error) {
-        console.error("Error fetching Report details:", error);
+        console.error("❌ Error fetching Report details:", error);
         res.status(500).json({ error: "Failed to fetch Report details" });
     }
 });
+
 
 router.get("/ro-report", async (req, res) => {
     const emp = req.headers["emp_id_second"];
