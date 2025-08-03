@@ -189,7 +189,8 @@ router.post("/accept", async (req, res) => {
             {
                 bo_accepted_by: acceptedEmp,
                 bo_status: "Accepted",
-                bo_accepted_date: new Date()
+                bo_accepted_date: new Date(),
+                updatedby: new Date(),
             },
             {
                 where: {

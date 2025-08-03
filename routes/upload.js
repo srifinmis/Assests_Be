@@ -194,6 +194,7 @@ router.post('/upload-ho', upload.single('file'), async (req, res) => {
 // POST /bulk/upload-roassignbo
 router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
     const { requested_by, accepted_by } = req.body;
+    // console.log('body api data: ', requested_by, accepted_by)
 
     try {
         const filePath = req.file.path;
@@ -349,9 +350,9 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
                     };
 
                     // Only include 'debit_id' if it's allowed to be null
-                    if (debit_card_details.rawAttributes.debit_id.allowNull) {
-                        updatedFields.debit_id = null;
-                    }
+                    // if (debit_card_details.rawAttributes.debit_id.allowNull) {
+                    //     updatedFields.debit_id = null;
+                    // }
 
                     // Fetch current values to prevent overwriting with null
                     const currentRecord = await debit_card_details.findOne({
@@ -380,7 +381,7 @@ router.post('/upload-roassignbo', upload.single('file'), async (req, res) => {
             } catch (error) {
                 await transaction.rollback();
                 console.error(error);
-                return res.status(500).json({ message: "❌ Failed to process file.", error: error.message });
+                return res.status(500).json({ message: "❌ Failed to process file bo.", error: error.message });
             }
         }
 
@@ -487,7 +488,7 @@ router.post('/acceptupload-ro', upload.single('file'), async (req, res) => {
             // ✅ All exist – update
             for (const record of rows) {
                 await debit_card_details.update(
-                    { ro_accepted_by: accepted_by, ro_status: "Accepted", ro_accepted_date: new Date() },
+                    { ro_accepted_by: accepted_by, ro_status: "Accepted", ro_accepted_date: new Date(), updatedby: new Date() },
                     {
                         where: { docket_id: record.docket_id }
                     });
@@ -595,7 +596,7 @@ router.post('/acceptupload-bo', upload.single('file'), async (req, res) => {
             // ✅ All exist – update
             for (const record of rows) {
                 await debit_card_details.update(
-                    { bo_accepted_by: accepted_by, bo_status: "Accepted", bo_accepted_date: new Date() },
+                    { bo_accepted_by: accepted_by, bo_status: "Accepted", bo_accepted_date: new Date(), updatedby: new Date() },
                     {
                         where: { docket_id: record.docket_id }
                     });

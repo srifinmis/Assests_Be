@@ -3,14 +3,14 @@ module.exports = function(sequelize, DataTypes) {
   return sequelize.define('debit_card_details', {
     debit_id: {
       autoIncrement: true,
-      autoIncrementIdentity: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
     docket_id: {
       type: DataTypes.STRING(40),
-      allowNull: true
+      allowNull: true,
+      unique: "debit_card_details_docket_id_key"
     },
     ho_by: {
       type: DataTypes.STRING(30),
@@ -124,14 +124,14 @@ module.exports = function(sequelize, DataTypes) {
     timestamps: false,
     indexes: [
       {
-        name: "debit_card_details_pkey",
+        name: "debit_card_details_docket_id_key",
         unique: true,
         fields: [
-          { name: "debit_id" },
+          { name: "docket_id" },
         ]
       },
       {
-        name: "drebit_card_details_pkey",
+        name: "debit_card_details_pkey",
         unique: true,
         fields: [
           { name: "debit_id" },

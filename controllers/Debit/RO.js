@@ -170,7 +170,8 @@ router.post("/accept", async (req, res) => {
             {
                 ro_status: "Accepted",
                 ro_accepted_by: roAcceptedBy,
-                ro_accepted_date: new Date()
+                ro_accepted_date: new Date(),
+                updatedby: new Date()
             },
             {
                 where: {
@@ -232,6 +233,7 @@ router.post("/assign", async (req, res) => {
                     ro_assigned_to: prefix,
                     ro_asigned_by: ro_asigned_by,
                     ro_assigned_date: new Date(),
+                    updatedby: new Date(),
                     bo_name: empName,
                     bo_status: "Pending",
                     ro_status: "Assigned",

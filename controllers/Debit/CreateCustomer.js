@@ -34,7 +34,8 @@ router.post("/createcustomer", async (req, res) => {
                 cust_assigned_from: requestedBy,
                 bo_asigned_by: requestedBy,
                 bo_status: 'Assigned',
-                bo_assigned_date: new Date()
+                bo_assigned_date: new Date(),
+                updatedby: new Date()
             },
             { where: { docket_id: instakitNo } }
         );
