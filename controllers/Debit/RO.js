@@ -10,11 +10,12 @@ const { debit_card_details, userlogins } = models;
 
 //ho code:::
 router.get("/ho-report", async (req, res) => {
+    console.log("📩 Incoming headers:", req.headers); // 🔍 Add this line
     const empId = req.headers["emp_id_second"];
     // console.log("id ho: ", empId);
 
     if (!empId) {
-        return res.status(400).json({ error: "emp_id is required in request headers" });
+        return res.status(400).json({ error: "emp_id_second is required in request headers" });
     }
 
     try {
