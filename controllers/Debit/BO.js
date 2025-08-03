@@ -54,7 +54,7 @@ router.get("/boiddropdown", async (req, res) => {
 });
 
 router.get("/bo-report", async (req, res) => {
-    const emp = req.headers["emp_id_second"];
+    const emp = req.query.emp_id_second;
     const empId = emp.split('-')[0];
     // console.log("id: ", empId);
 
@@ -147,7 +147,7 @@ router.get("/details", async (req, res) => {
 
 
 router.get("/detailslog", async (req, res) => {
-    const emp = req.headers["emp_id_second"];
+    const emp = req.query.emp_id_second;
     const empId = emp.split('-')[0];
     // console.log("id detailslog: ", empId)
 
@@ -209,7 +209,7 @@ router.post("/accept", async (req, res) => {
 });
 
 router.get("/detailsassign", async (req, res) => {
-    const emp = req.headers["emp_id_second"];
+    const emp = req.query.emp_id_second;
     const empId = emp.split('-')[0];
     // console.log("id: ", empId)
 

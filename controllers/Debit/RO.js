@@ -33,12 +33,13 @@ router.get("/ho-report", async (req, res) => {
 
 
 router.get("/ro-report", async (req, res) => {
-    const emp = req.headers["emp_id_second"];
+    const emp = req.query.emp_id_second;
+    // console.log("query 1 ro report: ", emp);
     const empId = emp.split('-')[0];
-    // console.log("id ro report: ", empId);
+    // console.log("query 2 ro report: ", empId);
 
     if (!empId) {
-        return res.status(400).json({ error: "emp_id is required in request headers" });
+        return res.status(400).json({ error: "ro emp_id_second is required in request headers" });
     }
 
     try {
@@ -125,12 +126,12 @@ router.get("/details", async (req, res) => {
 
 
 router.get("/detailslog", async (req, res) => {
-    const emp = req.headers["emp_id_second"];
+    const emp = req.query.emp_id_second;
     const empId = emp.split('-')[0];
     // console.log("details pending ro acceptance: ", empId)
 
     if (!empId) {
-        return res.status(400).json({ error: "emp_id is required in request headers" });
+        return res.status(400).json({ error: "ro detials emp_id_second is required in request headers" });
     }
 
     try {
@@ -289,7 +290,7 @@ router.post("/unassign", async (req, res) => {
 
 
 router.get("/rodetailsassign", async (req, res) => {
-    const emp = req.headers["emp_id_second"];
+    const emp = req.query.emp_id_second;
     const empId = emp.split('-')[0];
     // console.log("details : ", empId)
 
